@@ -1,0 +1,8 @@
+kitDirList
+(c) 2011 by phpManufaktur
+Ralf Hertsch, Stockholmer Str. 31, 13359 Berlin (Germany)
+http://phpManufaktur.de - ralf.hertsch@phpManufaktur.de
+
+Release 0.10
+xxxx-xx-xx
+First Beta Release
