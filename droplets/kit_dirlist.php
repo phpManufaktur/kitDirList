@@ -1,18 +1,7 @@
 //:Access to kitDirList - public or protected directory listing with full access control
-//:Parameters:
- media - path within MEDIA directory
- include - show only files with extensions, no dot, no wildcards, separate with comma
- exclude - like above but exclude files with extensions
- sort - default sorting: asc = ascending, desc = descending
- recursive - default false, enable for access to subdirectories
- kit_intern - allow access for named KIT INTERNAL CATEGORY's
- kit_news - allow access for named KIT NEWSLETTER's
- kit_dist - allow access for named KIT DISTRIBUTION LIST's
- wb_group - allow access for named WebsiteBaker groups
- 
+//:Please visit http://phpManufaktur.de for informations about kitDirList!
 /**
  * kitDirList
- * 
  * @author Ralf Hertsch (ralf.hertsch@phpmanufaktur.de)
  * @link http://phpmanufaktur.de
  * @copyright 2011
