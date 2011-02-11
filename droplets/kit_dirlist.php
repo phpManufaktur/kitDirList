@@ -1,5 +1,4 @@
-//:Show a specific directory in public or protected mode
-//:Usage: [[kit_dirlist]]
+<?php 
 /**
  * kitDirList
  * 
@@ -14,7 +13,6 @@ if (file_exists(WB_PATH.'/modules/kitDirList/class.dirlist.php')) {
   $dirList = new kitDirList();
   $params = $dirList->getParams();
   if (isset($media)) $params[kitDirList::param_media] = $media;
-  if (isset($recursive)) $params[kitDirList::param_recursive] = (bool) $recursive;
   if (isset($include)) $params[kitDirList::param_include] = $include;
   if (isset($exclude)) $params[kitDirList::param_exclude] = $exclude; 
   if (isset($redirect_id)) $params[kitDirList::param_redirect_id] = (int) $redirect_id;
@@ -22,9 +20,12 @@ if (file_exists(WB_PATH.'/modules/kitDirList/class.dirlist.php')) {
 	if (isset($kit_news)) $params[kitDirList::param_kit_news] = $kit_news;
 	if (isset($kit_dist)) $params[kitDirList::param_kit_dist] = $kit_dist;
 	if (isset($wb_group)) $params[kitDirList::param_wb_group] = $wb_group;
+	$params[kitDirList::param_copyright] = (isset($copyright) && strtolower($copyright == 'false')) ? false : true;
+	$params[kitDirList::param_recursive] = (isset($recursive) && strtolower($recursive == 'false')) ? false : true;
 	$dirList->setParams($params);
 	return $dirList->action();
 }
 else {
   return "kitDirList ist not installed!";
 }
+?>

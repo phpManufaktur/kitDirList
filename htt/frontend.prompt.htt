@@ -1,0 +1,5 @@
+<!-- $Id$ -->
+<div class="kdl_dialog">
+  <h2>{$header}</h2>
+  {$content}
+</div>

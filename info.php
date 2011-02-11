@@ -12,7 +12,7 @@
  * FOR VERSION- AND RELEASE NOTES PLEASE LOOK AT INFO.TXT!
  */
 
-$module_directory     = 'kitDirList';
+$module_directory     = 'kit_dirlist';
 $module_name          = 'kitDirList';
 $module_function      = 'snippet';
 $module_version       = '0.10';

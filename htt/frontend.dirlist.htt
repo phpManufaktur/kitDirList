@@ -1,0 +1,13 @@
+<!-- $Id$ -->
+<div class="kdl_dialog">
+  <table width="100%">
+    <colgroup>
+      <col width="3%" />
+      <col width="57%" />
+      <col width="15%" />
+      <col width="25%" />
+    </colgroup>
+    {$header}
+    {$items}
+  </table>
+</div>

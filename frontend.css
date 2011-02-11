@@ -1,0 +1,44 @@
+/**
+ * kitDirList
+ *
+ * @author Ralf Hertsch (ralf.hertsch@phpmanufaktur.de)
+ * @link http://phpmanufaktur.de
+ * @copyright 2011
+ * @license GNU GPL (http://www.gnu.org/licenses/gpl.html)
+ * @version $Id: class.dirlist.php 3 2011-02-10 06:31:13Z phpmanufaktur $
+ *
+ * FOR VERSION- AND RELEASE NOTES PLEASE LOOK AT INFO.TXT!
+ */
+
+.kdl_body {
+  clear: both;
+  margin: 20px 0;
+  padding: 0;
+  width: 100%;
+}
+.kdl_logout {
+  float: right;
+  font-size: 8pt;
+  margin: 0 0 15px 0;
+  padding: 0 3px 0 0;
+}
+.kdl_dialog {
+  clear: both;
+  margin: 0;
+  padding: 0;
+}
+.kdl_dialog td {
+  font-size: 8pt;
+}
+.kdl_dialog tr.flip {
+  color: #000;
+  background-color: #ffffcc;
+}
+.kdl_dialog tr.flop {
+  color: #000;
+  background-color: transparent;
+}
+.kdl_list_size,
+.kdl_list_date {
+  text-align: right;
+}

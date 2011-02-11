@@ -1,0 +1,6 @@
+<tr>
+  <th>{$icon}</th>
+  <th>{$files}</th>
+  <th>{$size}</th>
+  <th>{$date}</th>
+</tr>
