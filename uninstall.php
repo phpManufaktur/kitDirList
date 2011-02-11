@@ -10,4 +10,20 @@
  * @version $Id$
  */
 
+require_once(WB_PATH.'/modules/'.basename(dirname(__FILE__)).'/class.link.php');
+
+$error = '';
+
+$dbKITdirList = new dbKITdirList();
+if ($dbKITdirList->sqlTableExists()) {
+	if (!$dbKITdirList->sqlDeleteTable()) {
+		$error .= sprintf('[UNINSTALL %s] %s', $dbKITdirList->getTableName(), $dbKITdirList->getError());		
+	}
+}
+
+// Prompt Errors
+if (!empty($error)) {
+	$admin->print_error($error);
+}
+
 ?>

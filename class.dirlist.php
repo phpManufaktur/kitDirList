@@ -33,37 +33,43 @@ if (!class_exists('dbConnectLE')) require_once(WB_PATH.'/modules/dbconnect_le/in
 
 require_once(WB_PATH.'/modules/'.basename(dirname(__FILE__)).'/class.tools.php');
 require_once(WB_PATH.'/modules/'.basename(dirname(__FILE__)).'/class.mimetypes.php');
+require_once(WB_PATH.'/modules/'.basename(dirname(__FILE__)).'/class.link.php');
 
 class kitDirList {
 	
 	const request_action		= 'act';
+	const request_sort			= 'sort';
+	const request_sub_dir		= 'sd';
 	
 	const action_start			= 'go';
 	const action_logout			= 'out';
+	
+	const sort_asc					= 'asc';
+	const sort_desc					= 'desc';
 	
 	const param_media				= 'media';
 	const param_recursive		= 'recursive';
 	const param_include			= 'include';
 	const param_exclude			= 'exclude';
-	const param_redirect_id	= 'redirect_id';
 	const param_kit_intern	= 'kit_intern';
 	const param_kit_news		= 'kit_news';
 	const param_kit_dist		= 'kit_dist';
 	const param_wb_group		= 'wb_group';
 	const param_copyright		= 'copyright';
+	const param_sort				= 'sort';
 	
 	// params come from the droplet [[kit_dirlist]]
 	private $params = array(
 		self::param_media				=> '',
-		self::param_recursive		=> 0,
+		self::param_recursive		=> false,
 		self::param_include			=> '',
 		self::param_exclude			=> '',
-		self::param_redirect_id	=> -1,
 		self::param_kit_intern	=> '',
 		self::param_kit_news		=> '',
 		self::param_kit_dist		=> '',
 		self::param_wb_group		=> '',
-		self::param_copyright		=> 1
+		self::param_copyright		=> true,
+		self::param_sort				=> self::sort_asc
 	);
 	
 	const session_prefix		= 'kdl_';
@@ -94,6 +100,15 @@ class kitDirList {
 	private $page_link = '';
 	private $icon_url = '';
 	
+	private $general_excluded_extensions = array(
+		'php',
+		'php3',
+		'php4',
+		'php5',
+		'php6',
+		'phps'
+	);
+	
 	public function __construct($silent=true) {
 		global $kdlTools;
 		$this->silent = $silent;
@@ -112,7 +127,7 @@ class kitDirList {
 		$this->wb_login = (defined('LOGIN_URL')) ? true : false;
 		$url = '';
 		$kdlTools->getPageLinkByPageID(PAGE_ID, $url);
-		$this->page_link;  	
+		$this->page_link = $url;  	
 		$this->icon_url = WB_URL.'/modules/'.basename(dirname(__FILE__)).'/img/16x16/';
 	} // __construct()
 	
@@ -153,6 +168,7 @@ class kitDirList {
 	 * @return BOOL
 	 */
 	public function setParams($params=array()) {
+		global $kdlTools;
 		// set default values
 		foreach ($this->params as $key => $value) {
 			switch($key):
@@ -160,8 +176,6 @@ class kitDirList {
 				$this->params[$key] = ''; break;
 			case self::param_recursive:
 				$this->params[$key] = false; break;
-			case self::param_redirect_id:
-				$this->params[$key] = -1; break;
 			case self::param_copyright:
 				$this->params[$key] = true; break;
 			case self::param_include:
@@ -170,8 +184,9 @@ class kitDirList {
 			case self::param_kit_news:
 			case self::param_kit_dist:
 			case self::param_wb_group:
-				$this->params[$key] = '';
-				break;
+				$this->params[$key] = ''; break;
+			case self::param_sort:
+				$this->params[$key] = self::sort_asc; break;
 			default:
 				$this->params[$key] = 'undefined'; break;
 			endswitch;
@@ -181,10 +196,8 @@ class kitDirList {
 			if (key_exists($key, $this->params)) {
 				switch ($key):
 				case self::param_media:
-						$this->params[$key] = $this->trimSlashes(trim($value)).'/';
-					break;
-				case self::param_redirect_id:
-					$this->params[$key] = (int) $value;
+					$value = $kdlTools->addSlash($value); 
+					$this->params[$key] = $value;
 					break;
 				case self::param_recursive:
 				case self::param_copyright:	
@@ -211,12 +224,16 @@ class kitDirList {
 					$arr = explode(',', $value);
 					foreach ($arr as $item) {
 						$val = trim($item);
-						if ($key == self::param_exclude || $key == self::param_include) {
-							if (strpos($val, '.') === false) $val = '.'.$val; 
+						if (($key == self::param_exclude || $key == self::param_include) & (!empty($val))) {
+							$val = strtolower($val);
+							if (strpos($val, '.') !== false) $val = str_replace('.', '', $val); 
 						}
 						$para[] = $val;
 					}
 					$this->params[$key] = implode(',', $para);
+					break;
+				case self::param_sort:
+					$this->params[$key] = (strtolower($value) == self::sort_asc) ? self::sort_asc : self::sort_desc;
 					break;	
 				endswitch;
 			}	
@@ -232,7 +249,7 @@ class kitDirList {
 	 * Art des Schutzes pruefen und festlegen
 	 */
 	private function checkProtection() {
-		if (strpos($this->base_path, $this->protected_path) == 0) {
+		if (strpos($this->base_path, $this->protected_path) !== false) {
 			// base path reside within the protected path
 			if (!empty($_SESSION[self::session_prefix.self::param_kit_news]) ||
 					!empty($_SESSION[self::session_prefix.self::param_kit_dist]) ||
@@ -359,8 +376,12 @@ class kitDirList {
 					$this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, sprintf(kdl_error_kit_register_id_missing, $_SESSION['kit_aid'])));
 					return $this->getError();
 				}
+				$register = $register[0];
+				// E-Mail Adresse des Users festhalten
+				$_SESSION[self::session_prefix.self::session_user] = $register[dbKITregister::field_email];
+				// read contact
 				$contact = array();
-				if (!$dbContact->getContactByID($register[0][dbKITregister::field_contact_id], $contact)) {
+				if (!$dbContact->getContactByID($register[dbKITregister::field_contact_id], $contact)) {
 					$this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, $dbContact->getError()));
 					return $this->getError();
 				}
@@ -458,6 +479,7 @@ class kitDirList {
 					);
 					return $parser->get($this->template_path.'frontend.prompt.htt', $data);
 				}
+				$_SESSION[self::session_prefix.self::session_user] = $_SESSION['EMAIL'];
 				$_SESSION[self::session_prefix.self::session_auth] = 1;
 				$this->is_authenticated = true;
 				return true;
@@ -468,17 +490,6 @@ class kitDirList {
 			return $this->getError();
 		}
 	} // checkAuthentication()
-	
-	/**
-	 * Trims a path by removing leading and trailing slashes
-	 * @param STR $path
-	 * @return STR $path
-	 */
-	private function trimSlashes($path) {
-		while (strpos($path, '/') == 0) $path = substr($path, 1);
-		while (strrpos($path, '/') == strlen($path)-1) $path = substr($path, 0, strlen($path)-1);
-		return $path; 
-	} // trimSlashes()
 	
 	/**
     * Set $this->error to $error
@@ -711,43 +722,196 @@ class kitDirList {
 		global $parser;
 		global $kdlTools;
 		
+		// Access to Mime Types
 		$mimeType = new mimeTypes();
-		
+		// Sorting files
+		$files_sort = (isset($_REQUEST[self::request_sort])) ? $_REQUEST[self::request_sort] : $_SESSION[self::session_prefix.self::param_sort];
+				
+		if (($_SESSION[self::session_prefix.self::session_protect] == self::protect_group) ||
+				($_SESSION[self::session_prefix.self::session_protect] == self::protect_kit)) {
+			$redirect = true;		
+			$dbLink = new dbKITdirList();
+		}
+		else {
+			$redirect = false;
+		}
 		$dir = $this->base_path; 
+		$is_sub_dir = false;
+		$sub_dir = '';
+		
+		if (isset($_REQUEST[self::request_sub_dir])) {
+			// Unterverzeichnis angefordert
+			if (file_exists($dir.$_REQUEST[self::request_sub_dir])) {
+				$dir = $dir.$_REQUEST[self::request_sub_dir].DIRECTORY_SEPARATOR;
+				$is_sub_dir = true;
+				$sub_dir = $_REQUEST[self::request_sub_dir];
+			}
+		}
 		$dir_url = str_replace(WB_PATH, WB_URL, $dir);
 		
 		if (!file_exists($dir))	{
 			$this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, sprintf(kdl_error_dir_not_exists, $dir)));
 			return false;
 		}
-		$directory = scandir($dir);
+		// scan directory
+		$complete = scandir($dir);
+		$files = array();
+		$dirs = array();
+		// separate directories from files...
+		foreach ($complete as $item) {
+			if (is_file($dir.$item)) {
+				$files[] = $item;
+			}
+			elseif ($_SESSION[self::session_prefix.self::param_recursive]) {
+				$dirs[] = $item;
+			}
+		}
+		// sort files
+		if ($files_sort == self::sort_asc) {
+			sort($dirs);
+			sort($files);
+			$sort_link = sprintf('%s?%s=%s', $this->page_link, self::request_sort, self::sort_desc);
+		}
+		else {
+			rsort($dirs);
+			rsort($files);
+			$sort_link = sprintf('%s?%s=%s', $this->page_link, self::request_sort, self::sort_asc);
+		}
+		if ($is_sub_dir) $sort_link = sprintf('%s&%s=%s', $sort_link, self::request_sub_dir, $sub_dir);
 		
+		// display first directories and then files...
+		$directory = array_merge($dirs, $files);
+
 		$row = new Dwoo_Template_File($this->template_path.'frontend.dirlist.td.htt');
 		$items = '';
+		// headline
+		$data = array(
+			'icon'					=> '',
+			'files'					=> sprintf(	'<a href="%s"><img src="%s" width="16" height="16" alt="%s" title="%s" /></a> %s', 
+																	$sort_link, 
+																	$this->icon_url.'switch.gif', 
+																	kdl_header_list_sort, 
+																	kdl_header_list_sort, 
+																	kdl_header_list_files),
+			'size'					=> kdl_header_list_size,
+			'date'					=> kdl_header_list_date
+		);
+		$items .= $parser->get($this->template_path.'frontend.dirlist.th.htt', $data);
 		$flipflop = false;
 		foreach ($directory as $item) {
 			($flipflop) ? $flipflop = false : $flipflop = true;
-			($flipflop) ? $class = 'flip' : $class = 'flop';
-			
-			if ($item == '.' || $item == '..') continue;
-			
+			($flipflop) ? $class = 'flip' : $class = 'flop';			
+			if ($item == '.') continue;
 			// bei Fehler Datei ueberspringen
-			if (!file_exists($this->base_path.$item)) continue;
-			$icon = sprintf('<img src="%s" width="16" height="16" alt="%s" />',
-											$this->icon_url.$mimeType->getIconByType($dir.$item),
-											$mimeType->getMimeType($item));	
-			$file = sprintf('<a href="%s" target="_blank">%s</a>', $dir_url.$item, $item);
+			if (!file_exists($dir.$item)) continue;
+			
+			if ($item == '..') {
+				// Link auf das uebergeordnete Verzeichnis
+				if (empty($sub_dir)) continue;
+				$size = '';
+				$date = '';
+				$up = $this->page_link;
+				if (strpos($sub_dir, '/') > 0) {
+					$up = substr($sub_dir, 0, strrpos($sub_dir, '/'));
+					$up = sprintf('%s?%s=%s', $this->page_link, self::request_sub_dir, $up);					
+				}
+				$file = sprintf('<a href="%s">%s</a>', 
+												$up, 
+												sprintf('<img src="%s" width="32" height="16" alt="%s" />',
+																$this->icon_url.'up.gif',
+																kdl_alt_folder));
+			}
+			elseif (is_file($dir.$item)) {
+				// Datei...
+				$file_info = pathinfo($dir.$item);
+				// don't show any system files...
+				if (empty($file_info['filename'])) continue;
+				// check for general excluded extensions...
+				if (in_array(strtolower($file_info['extension']), $this->general_excluded_extensions)) continue;
+				if (!empty($_SESSION[self::session_prefix.self::param_include])) {
+					// show only files with included extensions
+					$include = explode(',', $_SESSION[self::session_prefix.self::param_include]);
+					if (!in_array(strtolower($file_info['extension']), $include)) continue;
+				}
+				if (!empty($_SESSION[self::session_prefix.self::param_exclude])) {
+					// don't show files with excluded extensions
+					$exclude = explode(',', $_SESSION[self::session_prefix.self::param_exclude]);
+					if (in_array(strtolower($file_info['extension']), $exclude)) continue;
+				}
+				// ok - this file should be shown...
+				if ($redirect) {
+					// protected file don't allow direct access...
+					if (file_exists(WB_PATH.'/kdl.php')) {
+						// link file exists in Root...
+						$file_link = WB_URL.'/kdl.php';
+					}
+					else {
+						$file_link = WB_URL.'/modules/'.basename(dirname(__FILE__)).'/kdl.php';
+					}
+					$where = array(
+						dbKITdirList::field_path => $dir.$item,
+						dbKITdirList::field_user => $_SESSION[self::session_prefix.self::session_user]
+					);
+					$link = array();
+					if (!$dbLink->sqlSelectRecord($where, $link)) {
+						$this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, $dbLink->getError()));
+						return false;
+					}
+					if (count($link) < 1) {
+						// create a new entry
+						$data = array(
+							dbKITdirList::field_file 		=> $item,
+							dbKITdirList::field_path		=> $dir.$item,
+							dbKITdirList::field_date		=> date('Y-m-d H:i:s'),
+							dbKITdirList::field_user		=> $_SESSION[self::session_prefix.self::session_user],
+							dbKITdirList::field_count		=> 0 
+						);
+						$id = -1;
+						if (!$dbLink->sqlInsertRecord($data, $id)) {
+							$this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, $dbLink->getError()));
+							return false;
+						}
+					}
+					else {
+						$id = $link[0][dbKITdirList::field_id];
+					}
+					$file_link = sprintf('%s?id=%d', $file_link, $id);
+				}
+				else {
+					// public directory, link directly to all files
+					$file_link = $dir_url.$item;
+				}
+				$size = $kdlTools->bytes2Str(filesize($dir.$item));
+				$date = date(kdl_cfg_date_time, filemtime($dir.$item));
+				$file = sprintf('<a href="%s" target="_blank">%s %s</a>', 
+												$file_link, 
+												sprintf('<img src="%s" width="16" height="16" alt="%s" />',
+																$this->icon_url.$mimeType->getIconByType($dir.$item),
+																$mimeType->getMimeType($item)),
+												$item);
+			}
+			else {
+				// Verzeichnis...
+				$size = '';
+				$date = '';
+				$file = sprintf('<a href="%s?%s=%s">%s %s</a>', 
+												$this->page_link, 
+												self::request_sub_dir, 
+												($is_sub_dir) ? $sub_dir.DIRECTORY_SEPARATOR.$item : $item, 
+												$icon = sprintf('<img src="%s" width="16" height="16" alt="%s" />',
+																				$this->icon_url.'folder.gif',
+																				kdl_alt_folder),
+												$item);
+			}	
+			
 			
 			$data = array(
 				'class'		=> $class,
-				'icon'		=> $icon,
 				'file'		=> $file,
-				'size'		=> $kdlTools->bytes2Str(filesize($dir.$item)),
-				'date'		=> date(kdl_cfg_date_time, filemtime($dir.$item))
+				'size'		=> $size,
+				'date'		=> $date
 			);
 			$items .= $parser->get($row, $data);
-			//if (is_dir($dir.$item)) $result .= '[x] ';
-			//$result .= trim($item)."<br>";
 		}	
 		
 		$data = array(

@@ -16,6 +16,9 @@
   padding: 0;
   width: 100%;
 }
+.kdl_body img {
+  border: none;
+}
 .kdl_logout {
   float: right;
   font-size: 8pt;
@@ -26,6 +29,17 @@
   clear: both;
   margin: 0;
   padding: 0;
+}
+.kdl_dialog table {
+  border: none;
+  border-collapse: collapse;
+}
+.kdl_dialog th {
+  background-color: #99b4d1;
+  color: #000;
+  font-size: 8pt;
+  font-weight: normal;
+  text-align: left;
 }
 .kdl_dialog td {
   font-size: 8pt;
@@ -38,7 +52,9 @@
   color: #000;
   background-color: transparent;
 }
-.kdl_list_size,
-.kdl_list_date {
+th.kdl_list_th_date,
+th.kdl_list_th_size,
+td.kdl_list_size,
+td.kdl_list_date {
   text-align: right;
 }

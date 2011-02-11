@@ -1,5 +1,4 @@
 <tr class="{$class}">
-  <td class="kdl_list_icon">{$icon}</td>
   <td class="kdl_list_file">{$file}</td>
   <td class="kdl_list_size">{$size}</td>
   <td class="kdl_list_date">{$date}</td>

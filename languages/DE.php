@@ -20,6 +20,8 @@
  *   
 **/
 
+define('kdl_alt_folder',										'Verzeichnis');
+
 define('kdl_btn_logout',										'Abmelden');
 
 define('kdl_cfg_date_time',									'd.m.Y - H:i');
@@ -29,6 +31,8 @@ define('kdl_content_login_kit',							'<p>Damit Sie auf die Dateien in diesem Ve
 
 define('kdl_error_create_dir',							'<p>Das Verzeichnis <b>%s</b> konnte nicht angelegt werden!</p>');
 define('kdl_error_dir_not_exists',					'<p>Das Verzeichnis <b>%s</b> existiert nicht!</p>');
+define('kdl_error_file_not_found',					'<p>Die Datei <b>%s</b> wurde nicht gefunden!</p>');
+define('kdl_error_kdl_id_not_available',		'<p>Die Datei mit der <b>ID %05d</b> steht nicht zur Verfügung!</p>');
 define('kdl_error_kit_dlg_invalid',					'<p>Die Kennung für den Dialog <b>%s</b> konnte nicht ermittelt werden!</p>');
 define('kdl_error_kit_id_missing',					'<p>Der KeepInTouch (KIT) Datensatz mit der <b>ID %05d</b> wurde nicht gefunden!</p>');
 define('kdl_error_kit_not_installed',				'<p>KeepInTouch (KIT) ist nicht installiert!</p>');
@@ -47,6 +51,10 @@ define('kdl_error_writing_htpasswd',				'<p>Die .htpasswd Datei konnte nicht ges
 
 define('kdl_header_access_denied',					'Zugriff verweigert');
 define('kdl_header_error',									'kitDirList - Fehlermeldung');
+define('kdl_header_list_date',							'Datum');
+define('kdl_header_list_files',							'Dateien');
+define('kdl_header_list_size',							'Größe');
+define('kdl_header_list_sort',							'Reihenfolge umkehren');
 define('kdl_header_login',									'Anmeldung erforderlich');
 
 define('kdl_msg_access_denied',							'<p>Sie sind nicht berechtigt auf diese Daten zuzugreifen.</p>');

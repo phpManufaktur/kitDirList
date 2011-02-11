@@ -1,6 +1,5 @@
 <tr>
-  <th>{$icon}</th>
-  <th>{$files}</th>
-  <th>{$size}</th>
-  <th>{$date}</th>
+  <th class="kdl_list_th_files">{$files}</th>
+  <th class="kdl_list_th_size">{$size}</th>
+  <th class="kdl_list_th_date">{$date}</th>
 </tr>

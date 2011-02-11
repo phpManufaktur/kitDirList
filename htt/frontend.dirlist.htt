@@ -2,10 +2,9 @@
 <div class="kdl_dialog">
   <table width="100%">
     <colgroup>
-      <col width="3%" />
-      <col width="57%" />
-      <col width="15%" />
-      <col width="25%" />
+      <col width="*" />
+      <col width="70" />
+      <col width="125" />
     </colgroup>
     {$header}
     {$items}

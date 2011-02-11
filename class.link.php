@@ -25,6 +25,7 @@ class dbKITdirList extends dbConnectLE {
 	const field_path			= 'dl_path';
 	const field_count			= 'dl_count';
 	const field_date			= 'dl_date';
+	const field_user			= 'dl_user';
 	const field_update		= 'dl_update';
 	
 	private $create_tables = false;
@@ -42,10 +43,10 @@ class dbKITdirList extends dbConnectLE {
 		$this->addFieldDefinition(self::field_path, "TEXT NOT NULL DEFAULT ''");
 		$this->addFieldDefinition(self::field_count, "INT(11) NOT NULL DEFAULT '0'");
 		$this->addFieldDefinition(self::field_date, "DATETIME DEFAULT '0000-00-00 00:00:00'");
+		$this->addFieldDefinition(self::field_user, "VARCHAR(128) NOT NULL DEFAULT ''");
 		$this->addFieldDefinition(self::field_update, "TIMESTAMP");
 		// check field definitions
 		$this->checkFieldDefinitions();
-		$this->setIndexFields(self::field_file, self::field_path);
 		// create tables
 		if ($this->create_tables) {
 			if (!$this->sqlTableExists()) {
@@ -59,5 +60,7 @@ class dbKITdirList extends dbConnectLE {
 	} // __construct()
 	
 } // class dbKITdirList
+
+
 
 ?>
