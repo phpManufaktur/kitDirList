@@ -1,4 +1,3 @@
-<?php 
 //:Access to kitDirList - public or protected directory listing with full access control
 //:Parameters:
  media - path within MEDIA directory
@@ -40,4 +39,3 @@ if (file_exists(WB_PATH.'/modules/kitDirList/class.dirlist.php')) {
 else {
   return "kitDirList ist not installed!";
 }
-?>
