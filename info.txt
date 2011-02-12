@@ -3,6 +3,11 @@ kitDirList
 Ralf Hertsch, Stockholmer Str. 31, 13359 Berlin (Germany)
 http://phpManufaktur.de - ralf.hertsch@phpManufaktur.de
 
+Release 0.11
+2010-02-12
+fixed: error handling empty KeepInTouch (KIT) parmeters if KIT is not installed
+fixed: access to empty $_SESSION var in kitDirList::show() 
+
 Release 0.10
-xxxx-xx-xx
+2010-02-11
 First Beta Release

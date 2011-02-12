@@ -208,6 +208,7 @@ class kitDirList {
 				case self::param_kit_intern:
 				case self::param_kit_news:
 				case self::param_kit_dist:
+					if (empty($value)) break;
 					if (!$this->kit_installed) {
 						$this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, sprintf(kdl_error_kit_param_rejected, $key)));
 						return false;
@@ -609,7 +610,7 @@ class kitDirList {
 	public function show($result='- no content -') {
 		// check if there was an error...
 		if ($this->isError()) $result = sprintf('<div class="kdl_error"><h1>%s</h1>%s</div>', kdl_header_error, $this->getError());
-		if ($_SESSION[self::session_prefix.self::param_copyright]) {
+		if (isset($_SESSION[self::session_prefix.self::param_copyright]) && ($_SESSION[self::session_prefix.self::param_copyright] == true)) {
 			// display copyright informations
 			$result = sprintf('%s<div style="margin:0;padding:10px 0;font-size:7pt;text-align:center;color:#808080;background-color:transparent;">'.
 												'<b>kitDirList</b> %01.2f - &copy; %d by <a href="mailto:ralf.hertsch@phpmanufaktur.de">Ralf Hertsch</a>, Berlin (Germany)<br />'.
