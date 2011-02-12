@@ -8,8 +8,8 @@
  * @license GNU GPL (http://www.gnu.org/licenses/gpl.html)
  * @version $Id$
  */
-if (file_exists(WB_PATH.'/modules/kitDirList/class.dirlist.php')) {
-  require_once(WB_PATH.'/modules/kitDirList/class.dirlist.php');
+if (file_exists(WB_PATH.'/modules/kit_dirlist/class.dirlist.php')) {
+  require_once(WB_PATH.'/modules/kit_dirlist/class.dirlist.php');
   $dirList = new kitDirList();
   $params = $dirList->getParams();
   if (isset($media)) $params[kitDirList::param_media] = $media;

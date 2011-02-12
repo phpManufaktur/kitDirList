@@ -33,7 +33,7 @@ else {
 
 // first check if user is authenticated...
 
-if (false === (isset($_SESSION['kdl_pct']) && isset($_SESSION['kdl_aut']) && isset($_SESSION['kdl_usr']) && isset($_GET['id']))) {
+if (false == (isset($_SESSION['kdl_pct']) && isset($_SESSION['kdl_aut']) && isset($_SESSION['kdl_usr']) && isset($_GET['id']))) {
 	// access not allowed
 	header($_SERVER['SERVER_PROTOCOL']." 403 Forbidden");
 	exit();
@@ -50,7 +50,8 @@ $where = array(
 );
 $dirlist = array();
 if (!$dbDirList->sqlSelectRecord($where, $dirlist)) {
-	echo $dbDirList->getError();
+	echo sprintf('[%s] %s', __LINE__, $dbDirList->getError());
+	exit();
 }
 if (count($dirlist) < 1) {
 	echo sprintf(kdl_error_kdl_id_not_available, $id);
@@ -63,6 +64,17 @@ if (!file_exists($dirlist[dbKITdirList::field_path])) {
 	exit();
 }
 
+// Datensatz aktualisieren
+$data = array(
+	dbKITdirList::field_count => $dirlist[dbKITdirList::field_count]+1
+);
+$where = array(
+	dbKITdirList::field_id => $dirlist[dbKITdirlist::field_id]
+);
+if (!$dbDirList->sqlUpdateRecord($data, $where)) {
+	echo sprintf('[%s] %s', __LINE__, $dbDirList->getError());
+	exit();
+}
 
 // start download
 header('Content-type: application/force-download');
@@ -70,6 +82,6 @@ header('Content-Transfer-Encoding: Binary');
 header('Content-length: '.filesize($dirlist[dbKITdirList::field_path]));
 header('Content-disposition: attachment;filename='.$dirlist[dbKITdirList::field_file]);
 readfile($dirlist[dbKITdirList::field_path]);
-exit(0);				
+exit();				
 
 ?>

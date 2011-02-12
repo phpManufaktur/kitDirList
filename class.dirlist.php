@@ -83,6 +83,8 @@ class kitDirList {
 	const protect_group			= 'grp';
 	const protect_kit				= 'kit';
 	
+	const protection_folder = 'kit_protected';
+	
 	private $message = '';
 	private $error = '';
 	private $silent = true;
@@ -114,8 +116,8 @@ class kitDirList {
 		$this->silent = $silent;
 		$this->media_path = WB_PATH.MEDIA_DIRECTORY.'/';
 		$this->media_url = WB_URL.MEDIA_DIRECTORY.'/';
-		$this->protected_path = WB_PATH.MEDIA_DIRECTORY.'/kit_protected/';
-		$this->protected_url  = WB_URL.MEDIA_DIRECTORY.'/kit_protected/';
+		$this->protected_path = WB_PATH.MEDIA_DIRECTORY.'/'.self::protection_folder.'/';
+		$this->protected_url  = WB_URL.MEDIA_DIRECTORY.'/'.self::protection_folder.'/';
 		$this->template_path = WB_PATH.'/modules/'.basename(dirname(__FILE__)).'/htt/';
 		$this->kit_installed = (file_exists(WB_PATH.'/modules/kit/class.contact.php')) ? true : false;
 		// check if $_SESSIONs are already defined - protect access by default!
@@ -611,7 +613,7 @@ class kitDirList {
 			// display copyright informations
 			$result = sprintf('%s<div style="margin:0;padding:10px 0;font-size:7pt;text-align:center;color:#808080;background-color:transparent;">'.
 												'<b>kitDirList</b> %01.2f - &copy; %d by <a href="mailto:ralf.hertsch@phpmanufaktur.de">Ralf Hertsch</a>, Berlin (Germany)<br />'.
-												'Please visit <a href="http://phpmanufaktur.de" target="_blank">phpManufaktur</a> for more informations.</div>', 
+												'Please visit <a href="http://phpmanufaktur.de" target="_blank">phpManufaktur</a> for more informations about <a href="http://phpmanufaktur.de/kit_dirlist" target="_blank">kitDirList</a>.</div>', 
 												$result, $this->getVersion(), date('Y'));
 		}
 		if (($_SESSION[self::session_prefix.self::session_protect] == self::protect_group) ||
@@ -892,6 +894,7 @@ class kitDirList {
 			}
 			else {
 				// Verzeichnis...
+				if (($redirect == false) && ($item == self::protection_folder)) continue;
 				$size = '';
 				$date = '';
 				$file = sprintf('<a href="%s?%s=%s">%s %s</a>', 
