@@ -15,9 +15,9 @@
 $module_directory     = 'kit_dirlist';
 $module_name          = 'kitDirList';
 $module_function      = 'snippet';
-$module_version       = '0.11';
+$module_version       = '0.12';
 $module_status        = 'Beta';
-$module_platform      = '2.8';
+$module_platform      = '2.8'; 
 $module_author        = 'Ralf Hertsch, Berlin (Germany)';
 $module_license       = 'GNU General Public License';
 $module_description   = 'Show public or protected directory list';

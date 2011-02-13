@@ -294,12 +294,27 @@ class kitDirListTools {
    * @return BOOLEAN
    */
   public function getUrlByPageID($pageID, &$url) {
-    if (!$this->getFileNameByPageID($pageID, $url)) return false;
-    $url = WB_URL. PAGES_DIRECTORY. '/'.$url;
+  	global $database;
+  	if (isset($_REQUEST['topics_title']) && defined('TOPIC_ID')) {
+  		// es handelt sich um eine TOPICS Seite
+  		$SQL = sprintf("SELECT link FROM %smod_topics WHERE topic_id='%d'", TABLE_PREFIX, TOPIC_ID);
+  		if (false !== ($link = $database->get_one($SQL))) {
+  			$url = WB_URL.PAGES_DIRECTORY.DIRECTORY_SEPARATOR.'topics'.DIRECTORY_SEPARATOR.$link.PAGE_EXTENSION;
+  		}
+  		else {
+  			return false;
+  		} 		
+  	}
+    elseif ($this->getFileNameByPageID($pageID, $url)) {
+    	$url = WB_URL. PAGES_DIRECTORY.DIRECTORY_SEPARATOR.$url;
+    }
+    else {
+    	return false;
+    }    
     return true;
   }
-
-  /**
+  
+    /**
    * Erzeugt einen Link fuer die als page_id angegebene Seite.
    * Parameter werden als Array in der Form 'KEY' => 'VALUE' uebergeben.
    *

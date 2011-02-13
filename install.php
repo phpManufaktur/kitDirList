@@ -36,6 +36,7 @@ if ($message != "") {
 
 // Prompt Errors
 if (!empty($error)) {
+	global $admin;
 	$admin->print_error($error);
 }
 

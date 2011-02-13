@@ -84,6 +84,8 @@ class kitDirList {
 	const protect_kit				= 'kit';
 	
 	const protection_folder = 'kit_protected';
+	const kdl_anchor				= 'kdl';
+	const description_file 	= 'dirlist.txt';
 	
 	private $message = '';
 	private $error = '';
@@ -101,6 +103,7 @@ class kitDirList {
 	private $is_authenticated = false;
 	private $page_link = '';
 	private $icon_url = '';
+	private $descriptions = array();
 	
 	private $general_excluded_extensions = array(
 		'php',
@@ -110,6 +113,11 @@ class kitDirList {
 		'php6',
 		'phps'
 	);
+	
+	private $general_excluded_files = array(
+		self::description_file
+	);
+
 	
 	public function __construct($silent=true) {
 		global $kdlTools;
@@ -620,13 +628,14 @@ class kitDirList {
 		if (($_SESSION[self::session_prefix.self::session_protect] == self::protect_group) ||
 				($_SESSION[self::session_prefix.self::session_protect] == self::protect_kit)) {
 			// display logout link if necessary...
-			$result = sprintf('<div class="kdl_body"><div class="kdl_logout"><a href="%s">%s</a></div>%s</div>',
+			$result = sprintf('<a name="%s"></a><div class="kdl_body"><div class="kdl_logout"><a href="%s">%s</a></div>%s</div>',
+												self::kdl_anchor,
 												sprintf('%s?%s=%s', $this->page_link, self::request_action, self::action_logout),
 												kdl_btn_logout,
 												$result); 		
 		}
 		else {
-			$result = sprintf('<div class="kdl_body">%s</div>', $result);
+			$result = sprintf('<a name="%s"></a><div class="kdl_body">%s</div>', self::kdl_anchor, $result);
 		}
 		if ($this->silent) return $result;
 		echo $result;
@@ -720,11 +729,39 @@ class kitDirList {
     return implode("", $this->old_pass );
   } // generatePassword()
 	
-	
+  /**
+   * Sucht nach der Datei dirlist.txt im Verzeichnis und
+   * versucht aus dieser Datei Beschreibungen zu den einzelnen
+   * Dateien auszulesen
+   * 
+   * @param STR directory path
+   */
+  private function getFileDescriptions($directory) {
+  	// reset description array
+  	$this->file_descriptions = array();
+  	$desc_file = $directory.self::description_file;
+  	if (!file_exists($desc_file)) return false;
+  	if (false === ($descriptions = file($desc_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES))) return false;
+  	foreach ($descriptions as $line) {
+  		if (strpos($line, '|') !== false) {
+  			$desc = explode('|', $line);
+  			if (count($desc) == 2) {
+  				// get file description - lower filename and replace " with ' to avoid conflicts with title tag
+  				$this->descriptions[strtolower($desc[0])] = str_replace('"', "'", $desc[1]); 
+  			}
+  		}
+  	}
+  	return true;
+  } // getFileDescriptions()
+  
+	/**
+	 * Anzeige des Verzeichnis
+	 * 
+	 * @return STR Directory
+	 */
 	public function directoryListing() {
 		global $parser;
 		global $kdlTools;
-		
 		// Access to Mime Types
 		$mimeType = new mimeTypes();
 		// Sorting files
@@ -756,6 +793,10 @@ class kitDirList {
 			$this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, sprintf(kdl_error_dir_not_exists, $dir)));
 			return false;
 		}
+		
+		// check for file descriptions
+		$this->getFileDescriptions($dir);
+
 		// scan directory
 		$complete = scandir($dir);
 		$files = array();
@@ -773,12 +814,12 @@ class kitDirList {
 		if ($files_sort == self::sort_asc) {
 			sort($dirs);
 			sort($files);
-			$sort_link = sprintf('%s?%s=%s', $this->page_link, self::request_sort, self::sort_desc);
+			$sort_link = sprintf('%s?%s=%s#%s', $this->page_link, self::request_sort, self::sort_desc, self::kdl_anchor);
 		}
 		else {
 			rsort($dirs);
 			rsort($files);
-			$sort_link = sprintf('%s?%s=%s', $this->page_link, self::request_sort, self::sort_asc);
+			$sort_link = sprintf('%s?%s=%s#%s', $this->page_link, self::request_sort, self::sort_asc, self::kdl_anchor);
 		}
 		if ($is_sub_dir) $sort_link = sprintf('%s&%s=%s', $sort_link, self::request_sub_dir, $sub_dir);
 		
@@ -829,6 +870,8 @@ class kitDirList {
 				$file_info = pathinfo($dir.$item);
 				// don't show any system files...
 				if (empty($file_info['filename'])) continue;
+				// check for general excluded files...
+				if (in_array(strtolower($item), $this->general_excluded_files)) continue;
 				// check for general excluded extensions...
 				if (in_array(strtolower($file_info['extension']), $this->general_excluded_extensions)) continue;
 				if (!empty($_SESSION[self::session_prefix.self::param_include])) {
@@ -886,8 +929,10 @@ class kitDirList {
 				}
 				$size = $kdlTools->bytes2Str(filesize($dir.$item));
 				$date = date(kdl_cfg_date_time, filemtime($dir.$item));
-				$file = sprintf('<a href="%s" target="_blank">%s %s</a>', 
+				$desc = (isset($this->descriptions[strtolower($item)])) ? sprintf(' title="%s"', $this->descriptions[strtolower($item)]) : '';
+				$file = sprintf('<a href="%s" %starget="_blank">%s %s</a>', 
 												$file_link, 
+												$desc,
 												sprintf('<img src="%s" width="16" height="16" alt="%s" />',
 																$this->icon_url.$mimeType->getIconByType($dir.$item),
 																$mimeType->getMimeType($item)),
