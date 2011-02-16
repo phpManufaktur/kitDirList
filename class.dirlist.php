@@ -605,7 +605,7 @@ class kitDirList {
 			break;
 		case self::action_start:
 		default: 
-			$result = $this->DirectoryListing();	
+			$result = $this->directoryListing();	
 		endswitch;		
 		
 		return $this->show($result);
@@ -675,7 +675,7 @@ class kitDirList {
 			$url = sprintf('%s/modules/kit/kit.php?lg=%s&act=dlg&dlg=%d&acc_act=out', WB_URL, strtolower(LANGUAGE), $dialogs[0][dbKITdialogsRegister::field_id]);
 			header("Location: $url");			
 		}
-		// otherwise only unset the protect session...
+		// otherwise only unset the protected session...
 		unset($_SESSION[self::session_prefix.self::session_protect]);
 	} // logout()
 	
@@ -782,7 +782,7 @@ class kitDirList {
 		if (isset($_REQUEST[self::request_sub_dir])) {
 			// Unterverzeichnis angefordert
 			if (file_exists($dir.$_REQUEST[self::request_sub_dir])) {
-				$dir = $dir.$_REQUEST[self::request_sub_dir].DIRECTORY_SEPARATOR;
+				$dir = $dir.$_REQUEST[self::request_sub_dir].'/';
 				$is_sub_dir = true;
 				$sub_dir = $_REQUEST[self::request_sub_dir];
 			}
@@ -946,7 +946,7 @@ class kitDirList {
 				$file = sprintf('<a href="%s?%s=%s">%s %s</a>', 
 												$this->page_link, 
 												self::request_sub_dir, 
-												($is_sub_dir) ? $sub_dir.DIRECTORY_SEPARATOR.$item : $item, 
+												($is_sub_dir) ? $sub_dir.'/'.$item : $item, 
 												$icon = sprintf('<img src="%s" width="16" height="16" alt="%s" />',
 																				$this->icon_url.'folder.gif',
 																				kdl_alt_folder),

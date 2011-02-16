@@ -299,14 +299,14 @@ class kitDirListTools {
   		// es handelt sich um eine TOPICS Seite
   		$SQL = sprintf("SELECT link FROM %smod_topics WHERE topic_id='%d'", TABLE_PREFIX, TOPIC_ID);
   		if (false !== ($link = $database->get_one($SQL))) {
-  			$url = WB_URL.PAGES_DIRECTORY.DIRECTORY_SEPARATOR.'topics'.DIRECTORY_SEPARATOR.$link.PAGE_EXTENSION;
+  			$url = WB_URL.PAGES_DIRECTORY.'/topics/'.$link.PAGE_EXTENSION;
   		}
   		else {
   			return false;
   		} 		
   	}
     elseif ($this->getFileNameByPageID($pageID, $url)) {
-    	$url = WB_URL. PAGES_DIRECTORY.DIRECTORY_SEPARATOR.$url;
+    	$url = WB_URL.PAGES_DIRECTORY.'/'.$url;
     }
     else {
     	return false;

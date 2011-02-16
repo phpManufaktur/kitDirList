@@ -3,6 +3,11 @@ kitDirList
 Ralf Hertsch, Stockholmer Str. 31, 13359 Berlin (Germany)
 http://phpManufaktur.de - ralf.hertsch@phpManufaktur.de
 
+Release 0.13
+2011-02-15
+fixed: recursive directory walk don't work on windows machines
+done: code cleanup kitDirList::action()
+
 Release 0.12
 2011-02-13
 fixed: creating response URL within TOPICS article
