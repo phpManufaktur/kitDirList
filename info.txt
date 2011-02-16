@@ -7,6 +7,7 @@ Release 0.13
 2011-02-15
 fixed: recursive directory walk don't work on windows machines
 done: code cleanup kitDirList::action()
+fixed: HTTP 403 status prompt an empty page
 
 Release 0.12
 2011-02-13

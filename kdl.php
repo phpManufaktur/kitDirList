@@ -36,7 +36,7 @@ else {
 if (false == (isset($_SESSION['kdl_pct']) && isset($_SESSION['kdl_aut']) && isset($_SESSION['kdl_usr']) && isset($_GET['id']))) {
 	// access not allowed
 	header($_SERVER['SERVER_PROTOCOL']." 403 Forbidden");
-	exit();
+	exit('<p><i>kitDirList:</i> <b>ACCESS DENIED!</b></p>');
 }
 
 $id = $_GET['id'];
