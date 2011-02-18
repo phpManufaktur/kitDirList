@@ -359,7 +359,7 @@ class kitDirList {
 		
 		if ($_SESSION[self::session_prefix.self::session_protect] == self::protect_none) {
 			// no protection needed
-			$_SESSION[self::session_prefix.self::session_auth] = 1;
+			$_SESSION[self::session_prefix.self::session_auth] = 0;
 			$this->is_authenticated = true;
 			return true;
 		}

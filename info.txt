@@ -3,6 +3,10 @@ kitDirList
 Ralf Hertsch, Stockholmer Str. 31, 13359 Berlin (Germany)
 http://phpManufaktur.de - ralf.hertsch@phpManufaktur.de
 
+Release 0.15
+2011-02-18
+fixed: security leak if user is switching from public directory to protected directory
+
 Release 0.14
 2011-02-18
 added: english README.txt with a brief description of kitDirList

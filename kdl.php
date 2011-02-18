@@ -33,6 +33,7 @@ else {
 
 // first check if user is authenticated...
 
+//if (false == (isset($_SESSION['kdl_pct']) && isset($_SESSION['kdl_aut']) && isset($_SESSION['kdl_usr']) && isset($_GET['id']))) {
 if (false == (isset($_SESSION['kdl_pct']) && isset($_SESSION['kdl_aut']) && isset($_SESSION['kdl_usr']) && isset($_GET['id']))) {
 	// access not allowed
 	header($_SERVER['SERVER_PROTOCOL']." 403 Forbidden");
