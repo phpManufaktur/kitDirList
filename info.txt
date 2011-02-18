@@ -3,6 +3,11 @@ kitDirList
 Ralf Hertsch, Stockholmer Str. 31, 13359 Berlin (Germany)
 http://phpManufaktur.de - ralf.hertsch@phpManufaktur.de
 
+Release 0.14
+2011-02-18
+added: english README.txt with a brief description of kitDirList
+added: english language file EN.php - many thanks to Armin Ipfelkofer for translation!
+
 Release 0.13
 2011-02-15
 fixed: recursive directory walk don't work on windows machines

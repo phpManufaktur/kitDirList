@@ -39,7 +39,7 @@ define('kdl_error_kit_not_installed',				'<p>KeepInTouch (KIT) ist nicht install
 define('kdl_error_kit_param_rejected',			'<p>Da KeepInTouch (KIT) nicht auf diesem System installiert ist, kann der Parameter <b>%s</b> nicht verwendet werden!</p>');
 define('kdl_error_kit_register_id_missing',	'<p>Für die KIT Registrierung mit der <b>ID %05d<b> existiert kein gültiger Eintrag. Bitte wenden Sie sich an den Systemadministrator!</p>');
 define('kdl_error_missing_kit_category',		'<p>Die mit dem Parameter <b>%s</b> genannte(n) Kategorien <b>%s</b> wurden nicht gefunden! Prüfen Sie Ihre Angaben!</p>');
-define('kdl_error_missing_wb_group',				'<p>Die mit dem Parameter <b>%s</b> genannete Gruppe <b>%s</b> wurde nicht gefunden! Pürfen Sie Ihre Angaben!</p>');
+define('kdl_error_missing_wb_group',				'<p>Die mit dem Parameter <b>%s</b> genannete Gruppe <b>%s</b> wurde nicht gefunden! Prüfen Sie Ihre Angaben!</p>');
 define('kdl_error_protection_undefined',		'<p>Es wurde nicht definiert auf welche Weise der Zugriff auf das Verzeichnis kontrolliert werden soll. Legen Sie eine KeepInTouch (KIT) Kategorie oder eine WebsiteBaker Benutzergruppe fest!</p>');
 define('kdl_error_public_dir_but_protect',	'<p>Sie haben ein frei zugängliches MEDIA Verzeichnis angegeben und möchten gleichzeitig eine Zugriffskontrolle über eine KeepInTouch (KIT) Kategorie bzw. über eine WebsiteBaker Benutzergruppe - dies ist nicht möglich. Um eine Zugriffskontrolle zu ermöglichen muss sich das Verzeichnis in <b>/media/kit_protect</b> befinden.</p>');
 define('kdl_error_unknown_param',						'<p>Der Parameter <b>%s</b> ist nicht definiert. Programmausführung gestoppt.</p>');

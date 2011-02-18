@@ -15,13 +15,13 @@
 $module_directory     = 'kit_dirlist';
 $module_name          = 'kitDirList';
 $module_function      = 'snippet';
-$module_version       = '0.13';
+$module_version       = '0.14';
 $module_status        = 'Beta';
 $module_platform      = '2.8'; 
 $module_author        = 'Ralf Hertsch, Berlin (Germany)';
 $module_license       = 'GNU General Public License';
 $module_description   = 'Show public or protected directory list';
-$module_home          = 'http://phpmanufaktur.de';
+$module_home          = 'http://phpmanufaktur.de/kit_dirlist';
 $module_guid          = 'A9628771-6557-48CB-81B7-660F3E3D7361';
 
 ?>
