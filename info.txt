@@ -3,6 +3,13 @@ kitDirList
 Ralf Hertsch, Stockholmer Str. 31, 13359 Berlin (Germany)
 http://phpManufaktur.de - ralf.hertsch@phpManufaktur.de
 
+Release 0.16
+2011-03-11
+added: params wb_auto=true and kit_auto=true automatically creates directories for each user. User can access to their directory by log in over KIT or WB
+added: param upload=true allow to upload files into the desired directory
+added: param unlink=true allow to delete files or directories (recursive)
+added: param mkdir=true allow to create directories
+
 Release 0.15
 2011-02-18
 fixed: security leak if user is switching from public directory to protected directory
