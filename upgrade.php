@@ -10,4 +10,33 @@
  * @version $Id$
  */
 
+require_once(WB_PATH.'/modules/'.basename(dirname(__FILE__)).'/class.droplets.php');
+
+$error = '';
+
+// remove Droplets
+$dbDroplets = new dbDroplets();
+$where = array(dbDroplets::field_name => 'kit_dirlist');
+if (!$dbDroplets->sqlDeleteRecord($where)) {
+	$message = sprintf('[UPGRADE] Error uninstalling Droplet: %s', $dbDroplets->getError());
+}
+
+// Install Droplets
+$droplets = new checkDroplets();
+if ($droplets->insertDropletsIntoTable()) {
+  $message = 'The Droplets for kitDirList where successfully installed! Please look at the Help for further informations.';
+}
+else {
+  $message = 'The installation of the Droplets for kitDirList failed. Error: '. $droplets->getError();
+}
+if ($message != "") {
+  echo '<script language="javascript">alert ("'.$message.'");</script>';
+}
+
+// Prompt Errors
+if (!empty($error)) {
+	global $admin;
+	$admin->print_error($error);
+}
+
 ?>

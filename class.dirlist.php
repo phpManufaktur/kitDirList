@@ -34,15 +34,27 @@ if (!class_exists('dbConnectLE')) require_once(WB_PATH.'/modules/dbconnect_le/in
 require_once(WB_PATH.'/modules/'.basename(dirname(__FILE__)).'/class.tools.php');
 require_once(WB_PATH.'/modules/'.basename(dirname(__FILE__)).'/class.mimetypes.php');
 require_once(WB_PATH.'/modules/'.basename(dirname(__FILE__)).'/class.link.php');
+require_once(WB_PATH.'/framework/functions.php');
+require_once(WB_PATH.'/framework/class.wb.php');
 
 class kitDirList {
 	
-	const request_action		= 'act';
-	const request_sort			= 'sort';
-	const request_sub_dir		= 'sd';
+	const request_action					= 'act';
+	const request_sort						= 'sort';
+	const request_sub_dir					= 'sd';
+	const request_file						= 'ufile';
+	const request_mkdir						= 'mkd';
+	const request_unlink					= 'ul';
+	const request_unlink_item			= 'uli';
+	const request_unlink_confirm	= 'ulc';
 	
-	const action_start			= 'go';
-	const action_logout			= 'out';
+	const action_start						= 'go';
+	const action_logout						= 'out';
+	const action_upload						= 'upl';
+	const action_unlink_file			= 'ulf';
+	const action_unlink_dir				= 'uld';
+	const action_unlink_pending		= 'ulp';
+	const action_unlink_confirmed	= 'ulc';
 	
 	const sort_asc					= 'asc';
 	const sort_desc					= 'desc';
@@ -57,6 +69,11 @@ class kitDirList {
 	const param_wb_group		= 'wb_group';
 	const param_copyright		= 'copyright';
 	const param_sort				= 'sort';
+	const param_wb_auto			= 'wb_auto';
+	const param_kit_auto		= 'kit_auto';
+	const param_upload			= 'upload';
+	const param_unlink			= 'unlink';
+	const param_mkdir				= 'mkdir';
 	
 	// params come from the droplet [[kit_dirlist]]
 	private $params = array(
@@ -69,7 +86,12 @@ class kitDirList {
 		self::param_kit_dist		=> '',
 		self::param_wb_group		=> '',
 		self::param_copyright		=> true,
-		self::param_sort				=> self::sort_asc
+		self::param_sort				=> self::sort_asc,
+		self::param_wb_auto			=> false,
+		self::param_kit_auto		=> false,
+		self::param_upload			=> false,
+		self::param_unlink			=> false,
+		self::param_mkdir				=> false
 	);
 	
 	const session_prefix		= 'kdl_';
@@ -82,8 +104,10 @@ class kitDirList {
 	const protect_undefined	= 'udf';
 	const protect_group			= 'grp';
 	const protect_kit				= 'kit';
+	const protect_wb				= 'wb';
 	
 	const protection_folder = 'kit_protected';
+	const contacts_folder		= 'contacts';
 	const kdl_anchor				= 'kdl';
 	const description_file 	= 'dirlist.txt';
 	
@@ -92,6 +116,8 @@ class kitDirList {
 	private $silent = true;
 	private $protected_path = '';
 	private $protected_url = '';
+	private $contacts_path = '';
+	private $contacts_url = '';
 	private $template_path = '';
 	private $old_pass = array();
 	private $kit_installed = false;
@@ -104,6 +130,7 @@ class kitDirList {
 	private $page_link = '';
 	private $icon_url = '';
 	private $descriptions = array();
+	private $is_admin = false;
 	
 	private $general_excluded_extensions = array(
 		'php',
@@ -126,6 +153,8 @@ class kitDirList {
 		$this->media_url = WB_URL.MEDIA_DIRECTORY.'/';
 		$this->protected_path = WB_PATH.MEDIA_DIRECTORY.'/'.self::protection_folder.'/';
 		$this->protected_url  = WB_URL.MEDIA_DIRECTORY.'/'.self::protection_folder.'/';
+		$this->contacts_path = $this->protected_path.self::contacts_folder.'/';
+		$this->contacts_url = $this->protected_url.self::contacts_folder.'/';
 		$this->template_path = WB_PATH.'/modules/'.basename(dirname(__FILE__)).'/htt/';
 		$this->kit_installed = (file_exists(WB_PATH.'/modules/kit/class.contact.php')) ? true : false;
 		// check if $_SESSIONs are already defined - protect access by default!
@@ -184,7 +213,12 @@ class kitDirList {
 			switch($key):
 			case self::param_media:
 				$this->params[$key] = ''; break;
+			case self::param_wb_auto:
+			case self::param_kit_auto:
 			case self::param_recursive:
+			case self::param_upload:
+			case self::param_unlink:
+			case self::param_mkdir:
 				$this->params[$key] = false; break;
 			case self::param_copyright:
 				$this->params[$key] = true; break;
@@ -205,12 +239,23 @@ class kitDirList {
 		foreach ($params as $key => $value) {
 			if (key_exists($key, $this->params)) {
 				switch ($key):
+				case self::param_wb_auto:
+				case self::param_kit_auto: 
+					$this->params[$key] = (bool) $value; 
+					if ($this->params[$key]) {
+						// if set to auto mode set also media directory
+						$this->params[self::param_media] = self::protection_folder.'/'.self::contacts_folder.'/'; 
+					}
+					break;
 				case self::param_media:
-					$value = $kdlTools->addSlash($value); 
+					if (!empty($value)) $value = $kdlTools->addSlash($value); 
 					$this->params[$key] = $value;
 					break;
 				case self::param_recursive:
 				case self::param_copyright:	
+				case self::param_upload:
+				case self::param_unlink:
+				case self::param_mkdir:
 					$this->params[$key] = (bool) $value;
 					break;
 				case self::param_kit_intern:
@@ -218,7 +263,7 @@ class kitDirList {
 				case self::param_kit_dist:
 					if (empty($value)) break;
 					if (!$this->kit_installed) {
-						$this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, sprintf(kdl_error_kit_param_rejected, $key)));
+						$this->setError(sprintf(kdl_error_kit_param_rejected, $key));
 						return false;
 					}
 					$arr = explode(',', $value);
@@ -249,7 +294,7 @@ class kitDirList {
 				endswitch;
 			}	
 			else {
-				$this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, sprintf(kdl_error_unknown_param_key, $key)));
+				$this->setError(sprintf(kdl_error_unknown_param_key, $key));
 				return false;
 			}		
 		}
@@ -259,7 +304,7 @@ class kitDirList {
 	/**
 	 * Art des Schutzes pruefen und festlegen
 	 */
-	private function checkProtection() {
+	private function checkProtection() { 
 		if (strpos($this->base_path, $this->protected_path) !== false) {
 			// base path reside within the protected path
 			if (!empty($_SESSION[self::session_prefix.self::param_kit_news]) ||
@@ -267,7 +312,7 @@ class kitDirList {
 					!empty($_SESSION[self::session_prefix.self::param_kit_intern])) {
 				// ok - pruefen ob der angeforderte Schutz mit KIT moeglich ist.
 				if (!$this->kit_installed) {
-					$this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, kdl_error_kit_not_installed));
+					$this->setError(kdl_error_kit_not_installed);
 					return false;
 				}		
 				// KIT einbinden
@@ -298,11 +343,11 @@ class kitDirList {
 													dbKITcontactArrayCfg::status_active);
 					$cfgArray = array();
 					if (!$dbContactArray->sqlExec($SQL, $cfgArray)) {
-						$this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, $dbContactArray->getError()));
+						$this->setError($dbContactArray->getError());
 						return false;
 					}
 					if (count($cfgArray) < 1) {
-						$this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, sprintf(kdl_error_missing_kit_category, $category, $_SESSION[self::session_prefix.$category])));
+						$this->setError(sprintf(kdl_error_missing_kit_category, $category, $_SESSION[self::session_prefix.$category]));
 						return false;
 					}
 				}
@@ -311,7 +356,7 @@ class kitDirList {
 			elseif (!empty($_SESSION[self::session_prefix.self::param_wb_group])) {
 				if (!$this->wb_login) {
 					// WB Anmeldung ist ausgeschaltet
-					$this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, sprintf(kdl_error_wb_login_not_enabled, self::param_wb_group)));
+					$this->setError(sprintf(kdl_error_wb_login_not_enabled, self::param_wb_group));
 					return false;
 				}
 				global $database;
@@ -320,12 +365,12 @@ class kitDirList {
 				foreach ($groups as $group) {
 					$SQL = sprintf(	"SELECT group_id FROM %sgroups WHERE name='%s'", TABLE_PREFIX, $group);
 					if (false ===($result = $database->query($SQL))) {
-						$this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, $database->get_error()));
+						$this->setError($database->get_error());
 						return false;
 					}
 					$data = $result->fetchRow(MYSQL_ASSOC);
 					if (!isset($data['group_id'])) {
-						$this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, sprintf(kdl_error_missing_wb_group, self::param_wb_group, $group)));
+						$this->setError(sprintf(kdl_error_missing_wb_group, self::param_wb_group, $group));
 						return false;
 					}
 					$wb_groups_id[] = $data['group_id'];
@@ -333,19 +378,36 @@ class kitDirList {
 				$_SESSION[self::session_prefix.self::session_protect] = self::protect_group;
 				$_SESSION[self::session_prefix.self::session_wb_grps] = implode(',', $wb_groups_id);
 			}
+			elseif (!empty($_SESSION[self::session_prefix.self::param_wb_auto])) {
+				// use automatic user directories
+				if (!$this->wb_login) {
+					// WB Anmeldung ist ausgeschaltet
+					$this->setError(sprintf(kdl_error_wb_login_not_enabled, self::param_wb_group));
+					return false;
+				}
+				$_SESSION[self::session_prefix.self::session_protect] = self::protect_wb;
+			}
+			elseif (!empty($_SESSION[self::session_prefix.self::param_kit_auto])) {
+				// use automatic user directories
+				if (!$this->kit_installed) {
+					$this->setError(kdl_error_kit_not_installed);
+					return false;
+				}		
+				$_SESSION[self::session_prefix.self::session_protect] = self::protect_kit;
+			}
 			else {
 				$_SESSION[self::session_prefix.self::session_protect] = self::protect_none;
-				$this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, kdl_error_protection_undefined));
+				$this->setError(kdl_error_protection_undefined);
 				return false;
 			}
 		}
-		else {
+		else { 
 			$_SESSION[self::session_prefix.self::session_protect] = self::protect_none;
 			if (!empty($_SESSION[self::session_prefix.self::param_kit_news]) ||
 					!empty($_SESSION[self::session_prefix.self::param_kit_dist]) ||
 					!empty($_SESSION[self::session_prefix.self::param_kit_intern]) ||
 					!empty($_SESSION[self::session_prefix.self::param_wb_group])) {
-				$this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, kdl_error_public_dir_but_protect));
+				$this->setError(kdl_error_public_dir_but_protect);
 				return false;		
 			}			
 		}
@@ -366,7 +428,7 @@ class kitDirList {
 		elseif ($_SESSION[self::session_prefix.self::session_protect] == self::protect_kit) {
 			// Protection by KeepInTouch login
 			if (!$this->kit_installed) {
-				$this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, kdl_error_kit_not_installed));
+				$this->setError(kdl_error_kit_not_installed);
 				return $this->getError();
 			}
 			if (isset($_SESSION['kit_aid']) && isset($_SESSION['kit_key'])) { 
@@ -380,11 +442,11 @@ class kitDirList {
 				);
 				$register = array();
 				if (!$dbRegister->sqlSelectRecord($where, $register)) {
-					$this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, $dbRegister->getError()));
+					$this->setError($dbRegister->getError());
 					return $this->getError();
 				}				
 				if (count($register) < 1) {
-					$this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, sprintf(kdl_error_kit_register_id_missing, $_SESSION['kit_aid'])));
+					$this->setError(sprintf(kdl_error_kit_register_id_missing, $_SESSION['kit_aid']));
 					return $this->getError();
 				}
 				$register = $register[0];
@@ -393,11 +455,11 @@ class kitDirList {
 				// read contact
 				$contact = array();
 				if (!$dbContact->getContactByID($register[dbKITregister::field_contact_id], $contact)) {
-					$this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, $dbContact->getError()));
+					$this->setError($dbContact->getError());
 					return $this->getError();
 				}
 				if (count($contact) < 1) {
-					$this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, sprintf(kdl_error_kit_id_missing, $register[0][dbKITregister::field_contact_id])));
+					$this->setError(sprintf(kdl_error_kit_id_missing, $register[0][dbKITregister::field_contact_id]));
 					return $this->getError();
 				}
 				// Kategorien des Users
@@ -470,7 +532,7 @@ class kitDirList {
 			else {
 				// pruefen ob der Anwender berechtigt ist auf die Daten zuzugreifen
 				if (!isset($_SESSION['GROUPS_ID']) || !isset($_SESSION[self::session_prefix.self::session_wb_grps])) {
-					$this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, kdl_error_wb_groups_undefined));
+					$this->setError(kdl_error_wb_groups_undefined);
 					return $this->getError();
 				}
 				$groups = explode(',', $_SESSION['GROUPS_ID']);
@@ -496,8 +558,38 @@ class kitDirList {
 				return true;
 			}
 		}
+		elseif ($_SESSION[self::session_prefix.self::session_protect] == self::protect_wb) {
+			// Protection by WB USER Authentication
+			if (!$wb->is_authenticated()) {
+				// Benutzer ist nicht angemeldet
+				$url = '';
+				$kdlTools->getPageLinkByPageID(PAGE_ID, $url);
+				$data = array(
+					'header'		=> kdl_header_login,
+					'content'		=> sprintf(kdl_content_login_wb, LOGIN_URL.'?redirect='.$url)
+				);
+				// Anmeldedialog anzeigen
+				return $parser->get($this->template_path.'frontend.login.wb.htt', $data);
+			}
+			require_once(WB_PATH.'/modules/'.basename(dirname(__FILE__)).'/class.users.php');
+			$dbGroups = new dbWBgroups();
+			$where = array(dbWBgroups::field_name => 'Administrators');
+			$groups = array();
+			if (!$dbGroups->sqlSelectRecord($where, $groups)) {
+				$this->setError($dbGroups->getError());
+				return false;
+			}
+			if (count($groups) < 1) {
+				$this->setError(kdl_error_wb_groups);
+				return false;
+			}
+			if ($_SESSION['GROUP_ID'] == $groups[0][dbWBgroups::field_group_id]) {
+				$this->is_admin = true;
+			}
+			return true;
+		}
 		else {
-			$this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, sprintf(kdl_error_unknown_param, $_SESSION[self::session_prefix.self::session_protect])));
+			$this->setError(sprintf(kdl_error_unknown_param, $_SESSION[self::session_prefix.self::session_protect]));
 			return $this->getError();
 		}
 	} // checkAuthentication()
@@ -508,7 +600,8 @@ class kitDirList {
     * @param STR $error
     */
   public function setError($error) {
-    $this->error = $error;
+  	$caller = next(debug_backtrace());
+  	$this->error = sprintf('[%s::%s - %s] %s', basename($caller['file']), $caller['function'], $caller['line'], $error);
   } // setError()
 
   /**
@@ -665,11 +758,11 @@ class kitDirList {
 			$where = array(dbKITdialogsRegister::field_name => $dlg_name);
 			$dialogs = array();
 			if (!$dbDlgRegister->sqlSelectRecord($where, $dialogs)) {
-				$this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, $dbDlgRegister->getError()));
+				$this->setError($dbDlgRegister->getError());
 				return $this->getError();
 			}
 			if (count($dialogs) < 1) {
-				$this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, sprintf(kdl_error_kit_dlg_invalid, $dlg_name)));
+				$this->setError(sprintf(kdl_error_kit_dlg_invalid, $dlg_name));
 				return $this->getError();
 			}
 			$url = sprintf('%s/modules/kit/kit.php?lg=%s&act=dlg&dlg=%d&acc_act=out', WB_URL, strtolower(LANGUAGE), $dialogs[0][dbKITdialogsRegister::field_id]);
@@ -683,8 +776,8 @@ class kitDirList {
 		// check protected path
 		if (!file_exists($this->protected_path)) {
 			// create directory
-			if (!mkdir($this->protected_path, 0777)) {
-				$this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, sprintf(kdl_error_create_dir, $this->protected_path)));
+			if (!mkdir($this->protected_path, 0755)) {
+				$this->setError(sprintf(kdl_error_create_dir, $this->protected_path));
 				return false;
 			}
 			// create directory protection
@@ -694,12 +787,80 @@ class kitDirList {
 		if (!file_exists($this->protected_path.'.htaccess') || !file_exists($this->protected_path.'.htpasswd')) {
 			if (!$this->createProtection()) return false;
 		}		
+		// check contacts path
+		if (!file_exists($this->contacts_path)) {
+			if ($this->kit_installed) {
+				// KIT installed
+				require_once(WB_PATH.'/modules/kit/class.config.php');
+				require_once(WB_PATH.'/modules/kit/class.contact.php');
+				global $dbRegister;
+				$SQL = sprintf( "SELECT * FROM %s WHERE %s='%s'",
+												$dbRegister->getTableName(),
+												dbKITregister::field_status,
+												dbKITregister::status_active);
+				if (!$dbRegister->sqlExec($SQL, $registers)) {
+					$this->setError($dbRegister->getError());
+					return false;
+				}
+				foreach ($registers as $register) {
+					$email = $register[dbKITregister::field_email];
+					$user_path = $this->contacts_path.$email[0].'/'.$email.'/user/';
+					$admin_path = $this->contacts_path.$email[0].'/'.$email.'/admin/';
+					foreach (array($user_path, $admin_path) as $path) {
+						if (!file_exists($path)) {
+							if (!mkdir($path, 0755, true)) {
+								$this->setError(sprintf(kdl_error_create_dir, $path));
+								return false;
+							}
+						}
+					}
+				}
+			}
+			else {
+				// WB USER administration
+				require_once(WB_PATH.'/modules/'.basename(dirname(__FILE__)).'/class.users.php');
+				
+				$dbGroups = new dbWBgroups();
+				$where = array(dbWBgroups::field_name => 'Administrators');
+				$admin_grps = array();
+				if (!$dbGroups->sqlSelectRecord($where, $admin_grps)) {
+					$this->setError($dbGroups->getError());
+					return false;
+				}
+				$admin_grp = $admin_grps[0][dbWBgroups::field_group_id];
+				
+				$dbUsers = new dbWBusers();
+				$SQL = sprintf( "SELECT * FROM %s WHERE %s='%s' AND %s!='%s'",
+												$dbUsers->getTableName(),
+												dbWBusers::field_active,
+												dbWBusers::status_active,
+												dbWBusers::field_group_id,
+												$admin_grp);
+				if (!$dbUsers->sqlExec($SQL, $users)) {
+					$this->setError($dbUsers->getError());
+					return false;
+				}
+				foreach ($users as $user) {
+					$email = $user[dbWBusers::field_email];
+					$user_path = $this->contacts_path.$email[0].'/'.$email.'/user/';
+					$admin_path = $this->contacts_path.$email[0].'/'.$email.'/admin/';
+					foreach (array($user_path, $admin_path) as $path) {
+						if (!file_exists($path)) {
+							if (!mkdir($path, 0755, true)) {
+								$this->setError(sprintf(kdl_error_create_dir, $path));
+								return false;
+							}
+						}
+					}
+				}
+			}
+		} // check contacts path
 		// set base_path
 		if (empty($this->base_path)) $this->base_path = $this->media_path.$_SESSION[self::session_prefix.self::param_media];
 		// check base path
 		if (!file_exists($this->base_path)) {
 			// base directory does not exists
-			$this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, sprintf(kdl_error_dir_not_exists, $this->base_path)));
+			$this->setError(sprintf(kdl_error_dir_not_exists, $this->base_path));
 			return false;
 		}
 		return true;
@@ -762,23 +923,64 @@ class kitDirList {
 	public function directoryListing() {
 		global $parser;
 		global $kdlTools;
+		global $wb;
+		
+		// for messages
+		$message = ($this->is_admin) ? kdl_msg_admin_mode : '';
+		
 		// Access to Mime Types
 		$mimeType = new mimeTypes();
 		// Sorting files
 		$files_sort = (isset($_REQUEST[self::request_sort])) ? $_REQUEST[self::request_sort] : $_SESSION[self::session_prefix.self::param_sort];
 				
 		if (($_SESSION[self::session_prefix.self::session_protect] == self::protect_group) ||
-				($_SESSION[self::session_prefix.self::session_protect] == self::protect_kit)) {
+				($_SESSION[self::session_prefix.self::session_protect] == self::protect_kit) ||
+				($_SESSION[self::session_prefix.self::session_protect] == self::protect_wb)) {
 			$redirect = true;		
 			$dbLink = new dbKITdirList();
 		}
 		else {
 			$redirect = false;
 		}
-		$dir = $this->base_path; 
+		
+		// email address
+		if (isset($_SESSION[self::session_prefix.self::session_user]) && !empty($_SESSION[self::session_prefix.self::session_user])) {
+			$email = $_SESSION[self::session_prefix.self::session_user];
+		}
+		elseif (isset($_SESSION['EMAIL']) && !empty($_SESSION['EMAIL'])) {
+			$email = $_SESSION['EMAIL'];
+		}
+		else {
+			$email = '';
+		}
+		
+		if (($this->params[self::param_kit_auto] || $this->params[self::param_wb_auto]) && !$this->is_admin) {
+			// use automatic user directories
+			$dir = $this->base_path.$email[0].'/'.$email.'/user/';
+			if (!file_exists($dir)) {
+				if (!mkdir($dir, 0755, true)) {
+					$this->setError(sprintf(kdl_error_create_dir, $dir));
+					return false;
+				}
+			}
+			$adm = $this->base_path.$email[0].'/'.$email.'/admin/';
+			if (!file_exists($adm)) {
+				if (!mkdir($adm, 0755, true)) {
+					$this->setError(sprintf(kdl_error_create_dir, $adm));
+					return false;
+				}
+			}
+		}
+		else {
+			if (stripos($this->base_path, $this->media_path.self::protection_folder.'/'.self::contacts_folder.'/') !== false) {
+				$this->setError(kdl_error_contacts_access);
+				return false;
+			}			
+			$dir = $this->base_path;
+		} 
 		$is_sub_dir = false;
 		$sub_dir = '';
-		
+				
 		if (isset($_REQUEST[self::request_sub_dir])) {
 			// Unterverzeichnis angefordert
 			if (file_exists($dir.$_REQUEST[self::request_sub_dir])) {
@@ -790,8 +992,124 @@ class kitDirList {
 		$dir_url = str_replace(WB_PATH, WB_URL, $dir);
 		
 		if (!file_exists($dir))	{
-			$this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, sprintf(kdl_error_dir_not_exists, $dir)));
+			$this->setError(sprintf(kdl_error_dir_not_exists, $dir));
 			return false;
+		}
+		
+		if (isset($_REQUEST[self::request_mkdir]) && !empty($_REQUEST[self::request_mkdir])) {
+			// create directory
+			$mkdir = media_filename($_REQUEST[self::request_mkdir]);
+			if (!file_exists($dir.'/'.$mkdir)) {
+				if (!mkdir($dir.'/'.$mkdir, 0755)) {
+					$this->setError(sprintf(kdl_error_create_dir, $mkdir));
+					return false;
+				}
+				else {
+					$message .= sprintf(kdl_msg_mkdir_success, $mkdir);
+				}
+			}
+		}
+		
+		if (isset($_REQUEST[self::request_action]) && ($_REQUEST[self::request_action] == self::action_upload)) {
+			// probably file uploaded...
+			if (isset($_FILES[self::request_file]) && (is_uploaded_file($_FILES[self::request_file]['tmp_name']))) {
+				if ($_FILES[self::request_file]['error'] == UPLOAD_ERR_OK) {
+					$tmp_file = $_FILES[self::request_file]['tmp_name'];
+					$upl_file =$dir. $_FILES[self::request_file]['name'];
+					if (!move_uploaded_file($tmp_file, $upl_file)) {
+						// error moving file
+						$this->setError(sprintf(kdl_error_upload_move_file, $_FILES[self::request_file]['name']));
+						return false;
+					}
+					else {
+						$message .= sprintf(kdl_msg_upload_success, $_FILES[self::request_file]['name']);
+						$data = array(
+							'email' => (empty($email)) ? kdl_text_anonymous : $email,
+							'file'	=> basename($upl_file) 
+						);
+						$body = $parser->get($this->template_path.'mail.upload.success.admin.htt', $data);
+						if (!$wb->mail(SERVER_EMAIL, SERVER_EMAIL, kdl_text_upload_subject, $body)) {
+							$this->setError(sprintf(kdl_error_send_mail, SERVER_EMAIL));
+							return false;
+						}
+					}
+				}	
+				else {
+					switch ($_FILES[self::request_file]['error']):
+					case UPLOAD_ERR_INI_SIZE:
+						$error = sprintf(kdl_error_upload_ini_size, ini_get('upload_max_filesize'));
+						break;
+					case UPLOAD_ERR_FORM_SIZE:
+						$error = kdl_error_upload_form_size;
+						break;
+					case UPLOAD_ERR_PARTIAL:
+						$error = sprintf(kld_error_upload_partial, $_FILES[self::request_file]['name']);
+						break;
+					default:
+						$error = kdl_error_upload_undefined_error;
+					endswitch;
+					$this->setError($error);
+					return false;
+				}
+			}
+		}
+		
+		if (isset($_REQUEST[self::request_unlink]) && isset($_REQUEST[self::request_unlink_confirm]) && isset($_REQUEST[self::request_unlink_item])) {
+			// check unlink of a file or a directory
+			if ($_REQUEST[self::request_unlink_confirm] == self::action_unlink_confirmed) {
+				// unlink is already confirmed!
+				if ($_REQUEST[self::request_unlink] == self::action_unlink_dir) {
+					// unlink directory
+					if (file_exists($dir.$_REQUEST[self::request_unlink_item])) {
+						if ($kdlTools->removeDirectory($dir.$_REQUEST[self::request_unlink_item])) {
+							$message .= sprintf(kdl_msg_unlink_dir_success, $_REQUEST[self::request_unlink_item]);
+						}
+						else {
+							$this->setError(sprintf(kdl_error_unlink_dir, $_REQUEST[self::request_unlink_item]));
+							return false;
+						}
+					}
+				}
+				elseif (file_exists($dir.$_REQUEST[self::request_unlink_item])) {
+					// unlink file
+					if (!@unlink($dir.$_REQUEST[self::request_unlink_item])) {
+						$this->setError(sprintf(kdl_error_unlink_file, $_REQUEST[self::request_unlink_item]));
+						return false;
+					}
+					else {
+						$message .= sprintf(kdl_msg_unlink_file_success, $_REQUEST[self::request_unlink_item]);
+					}
+				}
+			}
+			else {
+				// need confirmation!
+				if ($_REQUEST[self::request_unlink] == self::action_unlink_dir) {
+					$message .= sprintf(kdl_msg_confirm_unlink_dir,
+															$_REQUEST[self::request_unlink_item],
+															sprintf('%s?%s=%s&%s=%s&%s=%s%s',
+																			$this->page_link,
+																			self::request_unlink,
+																			self::action_unlink_dir,
+																			self::request_unlink_confirm,
+																			self::action_unlink_confirmed,
+																			self::request_unlink_item,
+																			$_REQUEST[self::request_unlink_item],
+																			($is_sub_dir) ? sprintf('&%s=%s', self::request_sub_dir, $sub_dir) : ''));
+				}
+				else {
+					$message .= sprintf(kdl_msg_confirm_unlink_file,
+															$_REQUEST[self::request_unlink_item],
+															sprintf('%s?%s=%s&%s=%s&%s=%s%s',
+																			$this->page_link,
+																			self::request_unlink,
+																			self::action_unlink_file,
+																			self::request_unlink_confirm,
+																			self::action_unlink_confirmed,
+																			self::request_unlink_item,
+																			$_REQUEST[self::request_unlink_item],
+																			($is_sub_dir) ? sprintf('&%s=%s', self::request_sub_dir, $sub_dir) : ''));
+				}
+			}	
 		}
 		
 		// check for file descriptions
@@ -842,12 +1160,15 @@ class kitDirList {
 		);
 		$items .= $parser->get($this->template_path.'frontend.dirlist.th.htt', $data);
 		$flipflop = false;
+		$no_entries = true;
 		foreach ($directory as $item) {
 			($flipflop) ? $flipflop = false : $flipflop = true;
 			($flipflop) ? $class = 'flip' : $class = 'flop';			
 			if ($item == '.') continue;
 			// bei Fehler Datei ueberspringen
 			if (!file_exists($dir.$item)) continue;
+			
+			$unlink_type = 'none';
 			
 			if ($item == '..') {
 				// Link auf das uebergeordnete Verzeichnis
@@ -866,6 +1187,7 @@ class kitDirList {
 																kdl_alt_folder));
 			}
 			elseif (is_file($dir.$item)) {
+				$unlink_type = 'file';
 				// Datei...
 				$file_info = pathinfo($dir.$item);
 				// don't show any system files...
@@ -900,7 +1222,7 @@ class kitDirList {
 					);
 					$link = array();
 					if (!$dbLink->sqlSelectRecord($where, $link)) {
-						$this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, $dbLink->getError()));
+						$this->setError($dbLink->getError());
 						return false;
 					}
 					if (count($link) < 1) {
@@ -914,7 +1236,7 @@ class kitDirList {
 						);
 						$id = -1;
 						if (!$dbLink->sqlInsertRecord($data, $id)) {
-							$this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, $dbLink->getError()));
+							$this->setError($dbLink->getError());
 							return false;
 						}
 					}
@@ -940,6 +1262,7 @@ class kitDirList {
 			}
 			else {
 				// Verzeichnis...
+				$unlink_type = 'dir';
 				if (($redirect == false) && ($item == self::protection_folder)) continue;
 				$size = '';
 				$date = '';
@@ -953,19 +1276,89 @@ class kitDirList {
 												$item);
 			}	
 			
+			if ($this->params[self::param_unlink] && ($unlink_type !== 'none')) {
+				// user is allowed to delete files...
+				$params = sprintf('%s%s=%s&%s=%s&%s=%s',
+													($is_sub_dir) ? sprintf('%s=%s&', self::request_sub_dir, $sub_dir) : '',
+													self::request_unlink,
+													($unlink_type == 'dir') ? self::action_unlink_dir : self::action_unlink_file,
+													self::request_unlink_confirm,
+													self::action_unlink_pending,
+													self::request_unlink_item,
+													$item);  
+				$unlink = sprintf('<a href="%s?%s"><img src="%s" width="16" height="16" alt="%s" /></a>',
+													$this->page_link,
+													$params, 
+													$this->icon_url.'unlink.gif',
+													kdl_alt_unlink);	
+			}
+			else {
+				$unlink = '';
+			}
 			
 			$data = array(
 				'class'		=> $class,
 				'file'		=> $file,
+				'option'	=> $unlink,
 				'size'		=> $size,
 				'date'		=> $date
 			);
 			$items .= $parser->get($row, $data);
+			$no_entries = false;
 		}	
 		
+		if ($no_entries == true) {
+			// no files...
+			$data = array(
+				'class'		=> 'flop',
+				'file'		=> kdl_msg_no_files,
+				'size'		=> '',
+				'date'		=> ''
+			);	
+			$items .= $parser->get($row, $data);
+		}
+		
+		// uploads allowed?
+		if ($this->params[self::param_upload]) {
+			if ((bool) ini_get('file_uploads') !== true) {
+				$this->setError(kdl_error_file_uploads_forbidden);
+				return false;
+			}
+			$post_max_size = $kdlTools->convertBytes(ini_get('post_max_size'));
+			$upload_max_filesize = $kdlTools->convertBytes(ini_get('upload_max_filesize'));
+			$max_size = ($post_max_size >= $upload_max_filesize) ? $upload_max_filesize : $post_max_size;
+			$max_size = $kdlTools->bytes2Str($max_size);
+			
+			$data = array(
+				'url'						=> ($is_sub_dir) ? sprintf('%s?%s=%s', $this->page_link, self::request_sub_dir, $sub_dir) : $this->page_link,
+				'action_name'		=> self::request_action,
+				'action_value'	=> self::action_upload,
+				'label_upload'	=> sprintf(kdl_label_upload, $max_size),
+				'file'					=> self::request_file,
+				'btn_ok'				=> kdl_btn_upload_file
+			);	
+			$upload = $parser->get($this->template_path.'frontend.upload.htt', $data);
+		}
+		else {
+			$upload = '';
+		}
+		
+		// create directories allowed?
+		if ($this->params[self::param_mkdir]) {
+			$data = array(
+				'url'						=> ($is_sub_dir) ? sprintf('%s?%s=%s', $this->page_link, self::request_sub_dir, $sub_dir) : $this->page_link,
+				'label_mkdir'		=> kdl_label_mkdir,
+				'mkdir_name'		=> self::request_mkdir,
+				'btn_mkdir'			=> kdl_btn_mkdir
+			);
+			$upload .= $parser->get($this->template_path.'frontend.mkdir.htt', $data);
+		}
+		
 		$data = array(
+			'message' => (!empty($message)) ? sprintf('<div class="kdl_message">%s</div>', $message) : '',
 			'header'	=> '',
-			'items'		=> $items
+			'items'		=> $items,
+			'footer'	=> $upload
 		);
 		return $parser->get($this->template_path.'frontend.dirlist.htt', $data);
 	} // showDirectory()
@@ -976,12 +1369,12 @@ class kitDirList {
 										"\nAuthName \"KIT - Protected Media Directory\"\nAuthType Basic\n<Limit GET>\n".
 										"require valid-user\n</Limit>",$this->protected_path.'.htpasswd'); 
 		if (false === file_put_contents($this->protected_path.'.htaccess', $data)) {
-			$this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, kdl_error_writing_htaccess));
+			$this->setError(kdl_error_writing_htaccess);
 			return false;
 		}
 		$data = sprintf("# .htpasswd generated by kitDirList\nkit_protector:%s", crypt($this->generatePassword()));
 		if (false === file_put_contents($this->protected_path.'.htpasswd', $data)) {
-			$this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, kdl_error_writing_htpasswd));
+			$this->setError(kdl_error_writing_htpasswd);
 			return false;
 		}		
 		return true;

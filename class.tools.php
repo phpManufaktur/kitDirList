@@ -582,154 +582,27 @@ class kitDirListTools {
     }
   }
 	
-  /**
-   * Prueft HTTP Links
-   * 
-   * @param $url
-   * @param $code_only
-   * 
-   * @author Johannes Froemter <j-f@gmx.net>
-   * @author Ralf Hertsch <hertsch@berlin.de>
-   */
-  public function checkLink($url, $code_only = false) {
-	  $url = trim($url);
-	  if (!preg_match("=://=", $url)) $url = "http://$url";
-	  $url = parse_url($url);
-	  if (strtolower($url["scheme"]) != "http") return FALSE;
-	
-	  if (!isset($url["port"])) $url["port"] = 80;
-	  if (!isset($url["path"])) $url["path"] = "/";
-	
-	  //$fp = fsockopen($url["host"], $url["port"], &$errno, &$errstr, 30);
-		$fp = @fsockopen($url["host"], $url["port"]);
-		@stream_set_timeout($fp, 15); 
-	  
-	  if (!$fp) {
-	  	return false;
-	  }
-	  else {
-	    $head = "";
-	    $httpRequest = "HEAD ". $url["path"] ." HTTP/1.1\r\n"
-	                  ."Host: ". $url["host"] ."\r\n"
-	                  ."Connection: close\r\n\r\n";
-	    fputs($fp, $httpRequest);
-	    while(!feof($fp)) $head .= fgets($fp, 1024);
-	    fclose($fp);
-			$matches = array();
-	    preg_match('=^(HTTP/\d+\.\d+) (\d{3}) ([^\r\n]*)=', $head, $matches);
-	    $http["Status-Line"] = $matches[0];
-	    $http["HTTP-Version"] = $matches[1];
-	    $http["Status-Code"] = $matches[2];
-	    $http["Reason-Phrase"] = $matches[3];
-	
-	    // Nur den HTTP Status Code zurueckgeben
-	    if ($code_only) return $http["Status-Code"];
-	
-	    $rclass = array("Informational", "Success",
-	                    "Redirection", "Client Error",
-	                    "Server Error");
-	    $http["Response-Class"] = $rclass[$http["Status-Code"][0] - 1];
-	
-	    preg_match_all("=^(.+): ([^\r\n]*)=m", $head, $matches, PREG_SET_ORDER);
-	    foreach($matches as $line) $http[$line[1]] = $line[2];
-	
-	    // Bei Umleitungen den Status Code der umgeleiteten Adresse ermitteln
-	    if ($http["Status-Code"][0] == 3)
-	      $http["Location-Status-Code"] = $this->checkLink($http["Location"], true);
-	
-	    return $http;
-	  }
-  } // checkLink()
-	
-  /**
-   * Checking Telefonnumber, accepts only international Format
-   * +49 (30) 1234566
-   */
-  public function checkPhone(&$number, $do_format=true) {
-  	$number = str_replace(' ', '', $number);
-		if (preg_match('/^(\+[1-9][0-9]*(\([0-9]*\)|-[0-9]*-))?[0]?[1-9][0-9\- ]*$/', $number)) {
-			// Telefonnummer ist in Ordnung
-			if ($do_format) {
-				$number = str_replace('(0', '(', $number);
-				$number = str_replace('(', ' (', $number);
-				$number = str_replace(')', ') ', $number);
-			}
-			return true;
-		}
-		return false;
-  }
-
-  public function showOSMmap($name='Berlin', $address='Brandenburger Tor', $zoom=14, $width=500, $height=400, $pos='') {
-  	global $dbCfg;
-  	$this->googleMapsAPIkey = $dbCfg->getValue(dbKITcfg::cfgGoogleMapsAPIkey);
-  	if (empty($this->googleMapsAPIkey)) {
-  		return '<div id="map" style="width:'.$width.'px;height:'.$height.'px;'.$pos.'">'.kit_error_google_maps_api_key_missing.'</div>';
-  	}
-  	if ($pos == strtolower('r')) {
-  		$pos = "float:right;";
-  	}
-  	elseif ($pos == strtolower('l')) {
-  		$pos = "float:left;";
-  	}
-  	else {
-  		$pos = '';
-  	}
-  	$result = '<script src="http://maps.google.de/maps?file=api&amp;v=2&amp;key=%s" type="text/javascript"></script>
-			<script type="text/javascript" src="http://www.openlayers.org/api/OpenLayers.js"></script>
-			<script type="text/javascript" src="http://www.openstreetmap.org/openlayers/OpenStreetMap.js"></script>
-  		<div id="map" style="width:%dpx;height:%dpx;%s"></div>
-			<script type="text/javascript">
-			  var map;
-			  function showMap(name,address,zoom){
-			    var geocoder=new GClientGeocoder();
-			    name=name.replace(/^"/,"");
-			    name=name.replace(/"$/,"");
-			    if(name==""){name=" ";}
-			    address=address.replace(/^"/,"");
-			    address=address.replace(/"$/,"");
-			    geocoder.getLatLng(address,function(point){
-			      if(!point){
-			        map=document.getElementById("map");
-			        map.innerHTML="<span class=\"map_error\">%s</span>";
-			      }
-			      else{
-			        var pLng = point.lng();
-			        var pLat = point.lat();
-			        map = new OpenLayers.Map("map", {
-			          maxExtent: new OpenLayers.Bounds(-20037508.34,-20037508.34,20037508.34,20037508.34),
-			          numZoomLevels: 19,
-			          maxResolution: 156543.0399,
-			          units: "m",
-			          projection: new OpenLayers.Projection("EPSG:900913"),
-			          displayProjection: new OpenLayers.Projection("EPSG:4326") });
-			        var layerMapnik = new OpenLayers.Layer.OSM.Mapnik("Mapnik (updated weekly)");
-			        var layerTah = new OpenLayers.Layer.OSM.Osmarender("Tiles@Home");
-			        map.addLayers([layerMapnik,layerTah]);
-			        map.setCenter(new OpenLayers.LonLat(pLng,pLat).transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913")), zoom);
-			        map.addLayer(new OpenLayers.Layer.Markers());
-			        var marker = new OpenLayers.Marker(map.getCenter());
-			        marker.events.register("mousedown", marker, function(evt) {
-			          alert(name+"\\n"+address);
-			          OpenLayers.Event.stop(evt); });
-			        map.layers[map.layers.length-1].addMarker(marker);      
-			      }
-			    });
-			  }
-			  showMap("%s", "%s", %s);
-			</script>';
-  	$result = sprintf($result,
-  										$this->googleMapsAPIkey,
-  										$width,
-  										$height,
-  										$pos,
-  										sprintf(kit_error_map_address_invalid, $address),
-  										$name,
-  										$address,
-  										$zoom
-  										);
-  	return $result;	
-  } // showOSMmap
-  
+  public function convertBytes($value) {
+    if (is_numeric($value)) {
+      return $value; }
+    else {
+      $value_length = strlen( $value );
+      $qty = substr( $value, 0, $value_length - 1 );
+      $unit = strtolower( substr( $value, $value_length - 1 ) );
+      switch ($unit):
+        case 'k':
+          $qty *= 1024;
+          break;
+        case 'm':
+          $qty *= 1048576;
+          break;
+        case 'g':
+          $qty *= 1073741824;
+          break;
+      endswitch;
+      return $qty;
+    }
+	} // convertBytes
   
   
 } // class kitTools

@@ -58,3 +58,27 @@ td.kdl_list_size,
 td.kdl_list_date {
   text-align: right;
 }
+.kdl_upload_dialog {
+  margin: 10px 0 5px 0;
+  padding: 0;
+  font-size: 8pt;
+  text-align: center;
+}
+.kdl_upload_dialog input {
+  font-size: 8pt;
+}
+.kdl_mkdir_dialog {
+  margin: 10px 0 5px 20px;
+  padding: 0;
+  font-size: 8pt;
+  text-align: center;
+}
+.kdl_mkdir_dialog input {
+  font-size: 8pt;
+}
+.kdl_message {
+  margin: 0 0 15px 0;
+  padding: 15px;
+  border: 1px solid #99b4d1;
+  font-size: 8pt;
+}

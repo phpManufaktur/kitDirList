@@ -1,12 +1,15 @@
 <!-- $Id$ -->
 <div class="kdl_dialog">
+  {$message|default:''}
   <table width="99%">
     <colgroup>
       <col width="*" />
+      <col width="10" />
       <col width="70" />
       <col width="125" />
     </colgroup>
     {$header}
     {$items}
   </table>
+  {$footer}
 </div>

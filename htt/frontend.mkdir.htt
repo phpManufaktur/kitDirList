@@ -1,0 +1,6 @@
+<!-- $Id$ -->
+<div class="kdl_mkdir_dialog">
+  <form name="kdl_mkdir" action="{$url}" method="POST">
+    {$label_mkdir} <input type="text" name="{$mkdir_name}" /> <input type="submit" value="{$btn_mkdir}" />
+  </form>
+</div>

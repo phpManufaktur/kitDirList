@@ -1,5 +1,6 @@
 <tr class="{$class}">
   <td class="kdl_list_file">{$file}</td>
+  <td class="kld_list_option">{$option|default:''}</td>
   <td class="kdl_list_size">{$size}</td>
   <td class="kdl_list_date">{$date}</td>
 </tr>

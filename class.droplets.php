@@ -12,6 +12,12 @@
  * THIS CLASS REALIZE AN INTERFACE TO THE DROPLETS MODULE OF RUUD EISINGA (RUUD)
  */
 
+// prevent this file from being accessed directly
+if (!defined('WB_PATH')) die('invalid call of '.$_SERVER['SCRIPT_NAME']);
+
+// include dbConnect
+if (!class_exists('dbConnectLE')) require_once(WB_PATH.'/modules/dbconnect_le/include.php');
+
 class dbDroplets extends dbConnectLE { 
 
 	const field_id							= 'id';

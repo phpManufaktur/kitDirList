@@ -1,0 +1,3 @@
+Der Kunde mit der E-Mail Adresse {$email} hat gerade die Datei
+--> {$file}
+auf den Server übertragen.

@@ -1,5 +1,6 @@
 <tr>
   <th class="kdl_list_th_files">{$files}</th>
+  <th class="kdl_list_th_option">{$option|default:''}</th>
   <th class="kdl_list_th_size">{$size}</th>
   <th class="kdl_list_th_date">{$date}</th>
 </tr>
