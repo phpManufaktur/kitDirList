@@ -99,6 +99,7 @@ class kitDirList {
 	const session_user			= 'usr';		// username
 	const session_auth			= 'aut';		// is user authorized?
 	const session_wb_grps		= 'grps';   // IDs of WB Groups
+	const session_admin			= 'adm';
 	
 	const protect_none			= 'nn';
 	const protect_undefined	= 'udf';
@@ -130,7 +131,7 @@ class kitDirList {
 	private $page_link = '';
 	private $icon_url = '';
 	private $descriptions = array();
-	private $is_admin = false;
+	//private $is_admin = false;
 	
 	private $general_excluded_extensions = array(
 		'php',
@@ -236,20 +237,23 @@ class kitDirList {
 			endswitch;
 		}
 		// get the new values
+		$skip_param_media = false;
 		foreach ($params as $key => $value) {
 			if (key_exists($key, $this->params)) {
 				switch ($key):
+				case self::param_media:
+					if ($skip_param_media) break;
+					if (!empty($value)) $value = $kdlTools->addSlash($value); 
+					$this->params[$key] = $value;
+					break;
 				case self::param_wb_auto:
 				case self::param_kit_auto: 
 					$this->params[$key] = (bool) $value; 
 					if ($this->params[$key]) {
 						// if set to auto mode set also media directory
 						$this->params[self::param_media] = self::protection_folder.'/'.self::contacts_folder.'/'; 
+						$skip_param_media = true;
 					}
-					break;
-				case self::param_media:
-					if (!empty($value)) $value = $kdlTools->addSlash($value); 
-					$this->params[$key] = $value;
 					break;
 				case self::param_recursive:
 				case self::param_copyright:	
@@ -414,6 +418,11 @@ class kitDirList {
 		return true;
 	} // checkSession()
 	
+	/**
+	 * Check the authentication by the desired access method.
+	 * Set the different $_SESSION vars for further checks and controls
+	 * @return BOOL true on success or STR login dialog or error message
+	 */
 	private function checkAuthentication() {
 		global $kdlTools;
 		global $parser;
@@ -425,7 +434,7 @@ class kitDirList {
 			$this->is_authenticated = true;
 			return true;
 		}
-		elseif ($_SESSION[self::session_prefix.self::session_protect] == self::protect_kit) {
+		elseif ($_SESSION[self::session_prefix.self::session_protect] == self::protect_kit) { 
 			// Protection by KeepInTouch login
 			if (!$this->kit_installed) {
 				$this->setError(kdl_error_kit_not_installed);
@@ -462,46 +471,54 @@ class kitDirList {
 					$this->setError(sprintf(kdl_error_kit_id_missing, $register[0][dbKITregister::field_contact_id]));
 					return $this->getError();
 				}
-				// Kategorien des Users
-				$kg = $contact[dbKITcontact::field_category];
-				if (!empty($contact[dbKITcontact::field_distribution])) {
-					if (!empty($kg)) $kg .= ',';
-					$kg .= $contact[dbKITcontact::field_distribution];
-				}
-				if (!empty($contact[dbKITcontact::field_newsletter])) {
-					if (!empty($kg)) $kg .= ',';
-					$kg .= $contact[dbKITcontact::field_newsletter];
-				}
-				$kit_groups = explode(',', $kg);
-				
-				$grps = $_SESSION[self::session_prefix.self::param_kit_dist]; 
-				if (!empty($_SESSION[self::session_prefix.self::param_kit_intern])) {
-					if (!empty($grps)) $grps .= ',';
-					$grps .= $_SESSION[self::session_prefix.self::param_kit_intern];
-				}
-				if (!empty($_SESSION[self::session_prefix.self::param_kit_news])) {
-					if (!empty($grps)) $grps .= ',';
-					$grps .= $_SESSION[self::session_prefix.self::param_kit_news];
-				}
-				$groups = explode(',', $grps);
-				$group_ok = false;
-				foreach ($groups as $group) {
-					if (in_array($group, $kit_groups)) {
-						$group_ok = true;
-						break;
+				if ($_SESSION[self::session_prefix.self::param_kit_auto] == false) {
+					// Kategorien des Users nur pruefen, wenn kit_auto NICHT aktiv ist
+					$kg = $contact[dbKITcontact::field_category];
+					if (!empty($contact[dbKITcontact::field_distribution])) {
+						if (!empty($kg)) $kg .= ',';
+						$kg .= $contact[dbKITcontact::field_distribution];
 					}
-				}
-				if (!$group_ok) {
-					// nicht berechtigt
-					$data = array(
-						'header'		=> kdl_header_access_denied,
-						'content'		=> kdl_msg_access_denied
-					);
-					return $parser->get($this->template_path.'frontend.prompt.htt', $data);
+					if (!empty($contact[dbKITcontact::field_newsletter])) {
+						if (!empty($kg)) $kg .= ',';
+						$kg .= $contact[dbKITcontact::field_newsletter];
+					}
+					$kit_groups = explode(',', $kg);
+					
+					$grps = $_SESSION[self::session_prefix.self::param_kit_dist]; 
+					if (!empty($_SESSION[self::session_prefix.self::param_kit_intern])) {
+						if (!empty($grps)) $grps .= ',';
+						$grps .= $_SESSION[self::session_prefix.self::param_kit_intern];
+					}
+					if (!empty($_SESSION[self::session_prefix.self::param_kit_news])) {
+						if (!empty($grps)) $grps .= ',';
+						$grps .= $_SESSION[self::session_prefix.self::param_kit_news];
+					}
+					$groups = explode(',', $grps);
+					$group_ok = false;
+					foreach ($groups as $group) {
+						if (in_array($group, $kit_groups)) {
+							$group_ok = true;
+							break;
+						}
+					}
+					if (!$group_ok) {
+						// nicht berechtigt
+						$data = array(
+							'header'		=> kdl_header_access_denied,
+							'content'		=> kdl_msg_access_denied
+						);
+						return $parser->get($this->template_path.'frontend.prompt.htt', $data);
+					}
 				}
 				// Benutzer freigeben
 				$_SESSION[self::session_prefix.self::session_auth] = 1;
 				$this->is_authenticated = true;
+				
+				// check if user is admin...
+				$admin_emails = array();
+				if ($dbRegister->getAdmins($admin_emails) && (in_array($_SESSION[self::session_prefix.self::session_user], $admin_emails))) { 
+					$_SESSION[self::session_prefix.self::session_admin] = true;
+				} 
 				return true;
 			}
 			else {
@@ -577,14 +594,15 @@ class kitDirList {
 			$groups = array();
 			if (!$dbGroups->sqlSelectRecord($where, $groups)) {
 				$this->setError($dbGroups->getError());
-				return false;
+				return $this->getError();
 			}
 			if (count($groups) < 1) {
 				$this->setError(kdl_error_wb_groups);
-				return false;
+				return $this->getError();
 			}
+			// check if user is admin...
 			if ($_SESSION['GROUP_ID'] == $groups[0][dbWBgroups::field_group_id]) {
-				$this->is_admin = true;
+				$_SESSION[self::session_prefix.self::session_admin] = true;
 			}
 			return true;
 		}
@@ -670,9 +688,8 @@ class kitDirList {
 	public function action() {
 		// check if there are errors...
 		if ($this->isError()) return $this->show();
+		
 		// get params to $_SESSION...
-		
-		
 		foreach ($this->params as $key => $value) {
 			if (!isset($_SESSION[self::session_prefix.$key]) || ($_SESSION[self::session_prefix.$key] !== $value)) $_SESSION[self::session_prefix.$key] = $value;
 		}
@@ -690,7 +707,7 @@ class kitDirList {
   	// get action...
     isset($_REQUEST[self::request_action]) ? $action = $_REQUEST[self::request_action] : $action = self::action_start;
   	// check authentication and return login if neccessary...
-  	if ((!$this->is_authenticated) && (true !== ($login = $this->checkAuthentication()))) return $login;
+  	if ((!$this->is_authenticated) && (is_string($login = $this->checkAuthentication()))) return $login;
   	
   	switch ($action):
 		case self::action_logout:
@@ -739,6 +756,7 @@ class kitDirList {
 		unset($_SESSION[self::session_prefix.self::session_user]);
 		unset($_SESSION[self::session_prefix.self::session_auth]);
 		unset($_SESSION[self::session_prefix.self::session_wb_grps]);
+		unset($_SESSION[self::session_prefix.self::session_admin]);
 		foreach ($this->params as $param) {
 			unset($_SESSION[self::session_prefix.$param]);
 		}
@@ -925,8 +943,31 @@ class kitDirList {
 		global $kdlTools;
 		global $wb;
 		
-		// for messages
-		$message = ($this->is_admin) ? kdl_msg_admin_mode : '';
+		$is_admin = false;
+		$message = '';
+		if (isset($_SESSION[self::session_prefix.self::session_admin]) && $_SESSION[self::session_prefix.self::session_admin]) {
+			$is_admin = true;
+			$message = kdl_msg_admin_mode;
+			// admins get full access, so set some params...
+			$_SESSION[self::session_prefix.self::param_upload] = true;
+			$this->params[self::param_upload] = true;
+			$_SESSION[self::session_prefix.self::param_recursive] = true;
+			$this->params[self::param_recursive] = true;
+			$_SESSION[self::session_prefix.self::param_mkdir] = true;
+			$this->params[self::param_mkdir] = true;
+			$_SESSION[self::session_prefix.self::param_unlink] = true;
+			$this->params[self::param_unlink] = true;
+			$_SESSION[self::session_prefix.self::param_copyright] = true;
+			$this->params[self::param_copyright] = true;
+		}
+		
+		if ((isset($_SESSION[self::session_prefix.self::param_mkdir]) && ($_SESSION[self::session_prefix.self::param_mkdir] == true)) &&
+				(!isset($_SESSION[self::session_prefix.self::param_recursive]) || 
+				(isset($_SESSION[self::session_prefix.self::param_recursive]) && ($_SESSION[self::session_prefix.self::param_recursive] == false)))) {
+			// if set param mkdir the param recursive must be set too...
+			$_SESSION[self::session_prefix.self::param_recursive] = true;
+			$this->params[self::param_recursive] = true;		
+		}
 		
 		// Access to Mime Types
 		$mimeType = new mimeTypes();
@@ -953,8 +994,8 @@ class kitDirList {
 		else {
 			$email = '';
 		}
-		
-		if (($this->params[self::param_kit_auto] || $this->params[self::param_wb_auto]) && !$this->is_admin) {
+
+		if (!$is_admin && ($this->params[self::param_kit_auto] || $this->params[self::param_wb_auto])) { 
 			// use automatic user directories
 			$dir = $this->base_path.$email[0].'/'.$email.'/user/';
 			if (!file_exists($dir)) {
@@ -972,12 +1013,14 @@ class kitDirList {
 			}
 		}
 		else {
-			if (stripos($this->base_path, $this->media_path.self::protection_folder.'/'.self::contacts_folder.'/') !== false) {
+			if (!$is_admin && stripos($this->base_path, $this->media_path.self::protection_folder.'/'.self::contacts_folder.'/') !== false) {
 				$this->setError(kdl_error_contacts_access);
 				return false;
 			}			
-			$dir = $this->base_path;
+			$dir = $this->base_path; 
 		} 
+		
+		// sub directories
 		$is_sub_dir = false;
 		$sub_dir = '';
 				
@@ -1014,23 +1057,43 @@ class kitDirList {
 			// probably file uploaded...
 			if (isset($_FILES[self::request_file]) && (is_uploaded_file($_FILES[self::request_file]['tmp_name']))) {
 				if ($_FILES[self::request_file]['error'] == UPLOAD_ERR_OK) {
-					$tmp_file = $_FILES[self::request_file]['tmp_name'];
-					$upl_file =$dir. $_FILES[self::request_file]['name'];
-					if (!move_uploaded_file($tmp_file, $upl_file)) {
-						// error moving file
-						$this->setError(sprintf(kdl_error_upload_move_file, $_FILES[self::request_file]['name']));
-						return false;
+					// check if uploaded file is forbidden
+					$ext = end(explode('.', $_FILES[self::request_file]['name']));
+					if ((in_array($_FILES[self::request_file]['tmp_name'], $this->general_excluded_files)) ||
+							(in_array($ext, $this->general_excluded_extensions))) {
+						// disallowed file or filetype - delete uploaded file
+						@unlink($_FILES[self::request_file]['tmp_name']);
+						$message .= sprintf(kdl_error_file_type_forbidden, basename($_FILES[self::request_file]['name']));
 					}
 					else {
-						$message .= sprintf(kdl_msg_upload_success, $_FILES[self::request_file]['name']);
-						$data = array(
-							'email' => (empty($email)) ? kdl_text_anonymous : $email,
-							'file'	=> basename($upl_file) 
-						);
-						$body = $parser->get($this->template_path.'mail.upload.success.admin.htt', $data);
-						if (!$wb->mail(SERVER_EMAIL, SERVER_EMAIL, kdl_text_upload_subject, $body)) {
-							$this->setError(sprintf(kdl_error_send_mail, SERVER_EMAIL));
+						$tmp_file = $_FILES[self::request_file]['tmp_name'];
+						$upl_file =$dir. media_filename($_FILES[self::request_file]['name']);
+						if (!move_uploaded_file($tmp_file, $upl_file)) {
+							// error moving file
+							$this->setError(sprintf(kdl_error_upload_move_file, $upl_file)); 
 							return false;
+						}
+						else {
+							$message .= sprintf(kdl_msg_upload_success, basename($upl_file));
+							$data = array(
+								'email' => (empty($email)) ? kdl_text_anonymous : $email,
+								'file'	=> basename($upl_file) 
+							);
+							$body = $parser->get($this->template_path.'mail.upload.success.admin.htt', $data);
+							$to_emails = array(SERVER_EMAIL);
+							if ($_SESSION[self::session_prefix.self::session_protect] == self::protect_kit) {
+								// if use KIT authtentification send 
+								require_once(WB_PATH.'/modules/kit/class.config.php');
+								$dbKITcfg = new dbKITcfg();
+								$to_emails = $dbKITcfg->getValue(dbKITcfg::cfgKITadmins);	
+								if (count($to_emails) < 1) $to_emails = array(SERVER_EMAIL);						
+							}
+							foreach ($to_emails as $to_email) {
+								if (!$wb->mail(SERVER_EMAIL, $to_email, kdl_text_upload_subject, $body)) {
+									$this->setError(sprintf(kdl_error_send_mail, SERVER_EMAIL));
+									return false;
+								}
+							}
 						}
 					}
 				}	

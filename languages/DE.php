@@ -36,6 +36,7 @@ define('kdl_error_contacts_access',					'<p>Der direkte Zugriff auf die automati
 define('kdl_error_create_dir',							'<p>Das Verzeichnis <b>%s</b> konnte nicht angelegt werden!</p>');
 define('kdl_error_dir_not_exists',					'<p>Das Verzeichnis <b>%s</b> existiert nicht!</p>');
 define('kdl_error_file_not_found',					'<p>Die Datei <b>%s</b> wurde nicht gefunden!</p>');
+define('kdl_error_file_type_forbidden',			'<p>Die übertragene Datei <b>%s</b> wird zurückgewiesen, da sich der Dateiname bzw. Dateityp in einer Sperrliste befindet.</p>');
 define('kdl_error_file_uploads_forbidden',	'<p>Datenübertragungen sind in der <b>php.ini</b> mit dem Eintrag <b>file_uploads</b> verboten!</p>');
 define('kdl_error_kdl_id_not_available',		'<p>Die Datei mit der <b>ID %05d</b> steht nicht zur Verfügung!</p>');
 define('kdl_error_kit_dlg_invalid',					'<p>Die Kennung für den Dialog <b>%s</b> konnte nicht ermittelt werden!</p>');

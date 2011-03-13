@@ -15,14 +15,18 @@ if (!defined('WB_PATH')) die('invalid call of '.$_SERVER['SCRIPT_NAME']);
 
 // Checking Requirements
 
+
 $PRECHECK['WB_VERSION'] = array('VERSION' => '2.8', 'OPERATOR' => '>=');
 $PRECHECK['PHP_VERSION'] = array('VERSION' => '5.2.0', 'OPERATOR' => '>=');
 $PRECHECK['WB_ADDONS'] = array(
-	'dbconnect_le'	=> array('VERSION' => '0.63', 'OPERATOR' => '>='),
+	'dbconnect_le'	=> array('VERSION' => '0.64', 'OPERATOR' => '>='),
 	'dwoo' => array('VERSION' => '0.10', 'OPERATOR' => '>=')
 );
+if (file_exists(WB_PATH.'/modules/kit/info.php')) {
+	$PRECHECK['WB_ADDONS']['kit'] = array('VERSION' => '0.34', 'OPERATOR' => '>='); 
+}
 
-global $database;
+global $database;  
 $sql = "SELECT `value` FROM `".TABLE_PREFIX."settings` WHERE `name`='default_charset'";
 $result = $database->query($sql);
 if ($result) {

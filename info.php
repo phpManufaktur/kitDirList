@@ -15,7 +15,7 @@
 $module_directory     = 'kit_dirlist';
 $module_name          = 'kitDirList';
 $module_function      = 'snippet';
-$module_version       = '0.16';
+$module_version       = '0.17';
 $module_status        = 'Beta';
 $module_platform      = '2.8'; 
 $module_author        = 'Ralf Hertsch, Berlin (Germany)';

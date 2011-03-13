@@ -3,6 +3,10 @@ kitDirList
 Ralf Hertsch, Stockholmer Str. 31, 13359 Berlin (Germany)
 http://phpManufaktur.de - ralf.hertsch@phpManufaktur.de
 
+Releas 0.17
+2011-03-13
+fixed: code cleanup and bug fixing for the new release 0.16 features 
+
 Release 0.16
 2011-03-11
 added: params wb_auto=true and kit_auto=true automatically creates directories for each user. User can access to their directory by log in over KIT or WB

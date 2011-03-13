@@ -81,7 +81,7 @@ if (!$dbDirList->sqlUpdateRecord($data, $where)) {
 header('Content-type: application/force-download');
 header('Content-Transfer-Encoding: Binary');
 header('Content-length: '.filesize($dirlist[dbKITdirList::field_path]));
-header('Content-disposition: attachment;filename='.$dirlist[dbKITdirList::field_file]);
+header('Content-disposition: attachment;filename="'.$dirlist[dbKITdirList::field_file].'"');
 readfile($dirlist[dbKITdirList::field_path]);
 exit();				
 
