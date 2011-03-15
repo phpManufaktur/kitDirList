@@ -50,6 +50,7 @@ class kitDirList {
 	
 	const action_start						= 'go';
 	const action_logout						= 'out';
+	const action_account					= 'acc';
 	const action_upload						= 'upl';
 	const action_unlink_file			= 'ulf';
 	const action_unlink_dir				= 'uld';
@@ -169,6 +170,7 @@ class kitDirList {
 		$kdlTools->getPageLinkByPageID(PAGE_ID, $url);
 		$this->page_link = $url;  	
 		$this->icon_url = WB_URL.'/modules/'.basename(dirname(__FILE__)).'/img/16x16/';
+		unset($_SESSION['KIT_EXTENSION']);
 	} // __construct()
 	
 	/**
@@ -523,14 +525,7 @@ class kitDirList {
 			}
 			else {
 				// KIT User ist nicht angemeldet
-				$url = '';				
-				$kdlTools->getPageLinkByPageID(PAGE_ID, $url);
-				$_SESSION['KIT_REDIRECT'] = $url;
-				$data = array(
-					'header'		=> kdl_header_login,
-					'content'		=> sprintf(kdl_content_login_kit, sprintf('%s/modules/kit/kit.php?act=login', WB_URL))
-				);
-				return $parser->get($this->template_path.'frontend.login.kit.htt', $data);
+				return $this->dlgKITaccount();
 			}			
 		}
 		elseif ($_SESSION[self::session_prefix.self::session_protect] == self::protect_group) {
@@ -611,6 +606,48 @@ class kitDirList {
 			return $this->getError();
 		}
 	} // checkAuthentication()
+	
+	public function dlgKITaccount($action='') {
+		global $dbCfg; // KIT config
+		global $dbDialogsRegister;
+		global $kdlTools;
+		if (!$this->kit_installed) {
+			$this->setError(kdl_error_kit_not_installed);
+			return $this->getError();
+		}
+		// get KIT Dialog Framework
+		require_once(WB_PATH.'/modules/kit/class.dialogs.php');
+		// get the KIT Account dialog which should be used
+  	$dialog_account = $dbCfg->getValue(dbKITcfg::cfgRegisterDlgACC);
+  	$where = array(dbKITdialogsRegister::field_name => $dialog_account);
+  	$regDialogs = array();
+  	if (!$dbDialogsRegister->sqlSelectRecord($where, $regDialogs)) {
+  		$this->setError($dbDialogsRegister->getError());
+  		return $this->getError();
+  	}
+  	if (count($regDialogs) < 1) {
+  		$this->setError(sprintf(kit_error_dlg_missing, $dialog_account));
+  		return $this->getError();
+  	}
+		if (file_exists(WB_PATH.'/modules/kit/dialogs/'.strtolower($dialog_account).'/'.strtolower($dialog_account).'.php')) {
+  		require_once(WB_PATH.'/modules/kit/dialogs/'.strtolower($dialog_account).'/'.strtolower($dialog_account).'.php');
+  		// call Account Dialog				
+  		unset($_SESSION['KIT_REDIRECT']);
+  		$_SESSION['KIT_EXTENSION'] = array('link' => $this->page_link, 'name' => MENU_TITLE);
+			$callDialog = new $dialog_account(true);
+			$callDialog->setDlgID($regDialogs[0][dbKITdialogsRegister::field_id]);
+			if (!empty($action)) $_REQUEST['acc_act'] = $action;
+			$result = $callDialog->action();
+			$url = '';				
+			$kdlTools->getPageLinkByPageID(PAGE_ID, $url);
+			$_SESSION['KIT_REDIRECT'] = $url;
+			return $result;
+		}
+		else {
+			$this->setError(sprintf(kit_error_dlg_missing, $dialog));
+			return $this->getError();
+		}  		
+	} // dlgKITaccount()
 	
 	/**
     * Set $this->error to $error
@@ -709,23 +746,28 @@ class kitDirList {
   	// check authentication and return login if neccessary...
   	if ((!$this->is_authenticated) && (is_string($login = $this->checkAuthentication()))) return $login;
   	
+  	$account = false;
   	switch ($action):
 		case self::action_logout:
 			$result = $this->logout();
+			break;
+		case self::action_account:
+			$result = $this->dlgKITaccount();
+			$account = true;
 			break;
 		case self::action_start:
 		default: 
 			$result = $this->directoryListing();	
 		endswitch;		
 		
-		return $this->show($result);
+		return $this->show($result, $account);
 	} // action()
 	
 	/**
 	 * ECHO or RETURN the result dialog depending on switch SILENT
 	 * @param STR $result
 	 */
-	public function show($result='- no content -') {
+	public function show($result='- no content -', $account=false) {
 		// check if there was an error...
 		if ($this->isError()) $result = sprintf('<div class="kdl_error"><h1>%s</h1>%s</div>', kdl_header_error, $this->getError());
 		if (isset($_SESSION[self::session_prefix.self::param_copyright]) && ($_SESSION[self::session_prefix.self::param_copyright] == true)) {
@@ -735,14 +777,26 @@ class kitDirList {
 												'Please visit <a href="http://phpmanufaktur.de" target="_blank">phpManufaktur</a> for more informations about <a href="http://phpmanufaktur.de/kit_dirlist" target="_blank">kitDirList</a>.</div>', 
 												$result, $this->getVersion(), date('Y'));
 		}
-		if (($_SESSION[self::session_prefix.self::session_protect] == self::protect_group) ||
+		if (!$account && isset($_SESSION[self::session_prefix.self::session_protect]) &&
 				($_SESSION[self::session_prefix.self::session_protect] == self::protect_kit)) {
+			// display logout link if necessary...
+			$result = sprintf('<a name="%s"></a><div class="kdl_body"><div class="kdl_logout"><a href="%s">%s</a> &bull; <a href="%s">%s</a></div>%s</div>',
+												self::kdl_anchor,
+												sprintf('%s?%s=%s', $this->page_link, self::request_action, self::action_account),
+												kdl_btn_account,
+												sprintf('%s?%s=%s', $this->page_link, self::request_action, self::action_logout),
+												kdl_btn_logout,
+												$result); 		
+		}
+		elseif (isset($_SESSION[self::session_prefix.self::session_protect]) && 
+						(($_SESSION[self::session_prefix.self::session_protect] == self::protect_wb) ||
+						 ($_SESSION[self::session_prefix.self::session_protect] == self::protect_group))) {
 			// display logout link if necessary...
 			$result = sprintf('<a name="%s"></a><div class="kdl_body"><div class="kdl_logout"><a href="%s">%s</a></div>%s</div>',
 												self::kdl_anchor,
 												sprintf('%s?%s=%s', $this->page_link, self::request_action, self::action_logout),
 												kdl_btn_logout,
-												$result); 		
+												$result);
 		}
 		else {
 			$result = sprintf('<a name="%s"></a><div class="kdl_body">%s</div>', self::kdl_anchor, $result);
@@ -760,7 +814,8 @@ class kitDirList {
 		foreach ($this->params as $param) {
 			unset($_SESSION[self::session_prefix.$param]);
 		}
-		if ($_SESSION[self::session_prefix.self::session_protect] == self::protect_group) {
+		if (($_SESSION[self::session_prefix.self::session_protect] == self::protect_group) ||
+				($_SESSION[self::session_prefix.self::session_protect] == self::protect_wb)) {
 			// WebsiteBaker Logout
 			unset($_SESSION[self::session_prefix.self::session_protect]);
 			header("Location: ".LOGOUT_URL);
@@ -768,23 +823,7 @@ class kitDirList {
 		elseif ($_SESSION[self::session_prefix.self::session_protect] == self::protect_kit) {
 			// KeepInTouch Logout
 			unset($_SESSION[self::session_prefix.self::session_protect]);
-			require_once(WB_PATH.'/modules/kit/initialize.php');
-			require_once(WB_PATH.'/modules/kit/class.dialogs.php');
-			$kitCfg = new dbKITcfg();
-			$dlg_name = $kitCfg->getValue(dbKITcfg::cfgRegisterDlgACC);
-			$dbDlgRegister = new dbKITdialogsRegister();
-			$where = array(dbKITdialogsRegister::field_name => $dlg_name);
-			$dialogs = array();
-			if (!$dbDlgRegister->sqlSelectRecord($where, $dialogs)) {
-				$this->setError($dbDlgRegister->getError());
-				return $this->getError();
-			}
-			if (count($dialogs) < 1) {
-				$this->setError(sprintf(kdl_error_kit_dlg_invalid, $dlg_name));
-				return $this->getError();
-			}
-			$url = sprintf('%s/modules/kit/kit.php?lg=%s&act=dlg&dlg=%d&acc_act=out', WB_URL, strtolower(LANGUAGE), $dialogs[0][dbKITdialogsRegister::field_id]);
-			header("Location: $url");			
+			return $this->dlgKITaccount('out');			
 		}
 		// otherwise only unset the protected session...
 		unset($_SESSION[self::session_prefix.self::session_protect]);

@@ -3,7 +3,11 @@ kitDirList
 Ralf Hertsch, Stockholmer Str. 31, 13359 Berlin (Germany)
 http://phpManufaktur.de - ralf.hertsch@phpManufaktur.de
 
-Releas 0.17
+Release 0.18
+2011-03-15
+added: access to KIT account if user is logged in
+
+Release 0.17
 2011-03-13
 fixed: code cleanup and bug fixing for the new release 0.16 features 
 

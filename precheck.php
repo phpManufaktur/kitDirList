@@ -23,7 +23,7 @@ $PRECHECK['WB_ADDONS'] = array(
 	'dwoo' => array('VERSION' => '0.10', 'OPERATOR' => '>=')
 );
 if (file_exists(WB_PATH.'/modules/kit/info.php')) {
-	$PRECHECK['WB_ADDONS']['kit'] = array('VERSION' => '0.34', 'OPERATOR' => '>='); 
+	$PRECHECK['WB_ADDONS']['kit'] = array('VERSION' => '0.35', 'OPERATOR' => '>='); 
 }
 
 global $database;  

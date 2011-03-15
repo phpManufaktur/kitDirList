@@ -23,6 +23,7 @@
 define('kdl_alt_folder',										'Verzeichnis');
 define('kdl_alt_unlink',										'Löschen');
 
+define('kdl_btn_account',										'Konto');
 define('kdl_btn_logout',										'Abmelden');
 define('kdl_btn_mkdir',											'Anlegen');
 define('kdl_btn_upload_file',								'Übertragung starten');
