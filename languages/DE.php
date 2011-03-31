@@ -89,4 +89,5 @@ define('kdl_msg_upload_success',						'<p>Die Datei <b>%s</b> wurde erfolgreich 
 
 define('kdl_text_anonymous',								'- anonym -');
 define('kdl_text_upload_subject',						'kitDirList - Datenübertragung');
+
 ?>

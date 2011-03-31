@@ -3,6 +3,11 @@ kitDirList
 Ralf Hertsch, Stockholmer Str. 31, 13359 Berlin (Germany)
 http://phpManufaktur.de - ralf.hertsch@phpManufaktur.de
 
+Release 0.19
+2011-03-31
+added: NL.php - many thanks for translation to Erik van Iterson
+updated: EN.php - added missing entries
+
 Release 0.18
 2011-03-15
 added: access to KIT account if user is logged in
