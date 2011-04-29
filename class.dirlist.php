@@ -110,6 +110,7 @@ class kitDirList {
 	
 	const protection_folder = 'kit_protected';
 	const contacts_folder		= 'contacts';
+	const registry_folder		= 'registry';
 	const kdl_anchor				= 'kdl';
 	const description_file 	= 'dirlist.txt';
 	
@@ -120,6 +121,8 @@ class kitDirList {
 	private $protected_url = '';
 	private $contacts_path = '';
 	private $contacts_url = '';
+	private $registry_path = '';
+	private $registry_url = '';
 	private $template_path = '';
 	private $old_pass = array();
 	private $kit_installed = false;
@@ -157,6 +160,8 @@ class kitDirList {
 		$this->protected_url  = WB_URL.MEDIA_DIRECTORY.'/'.self::protection_folder.'/';
 		$this->contacts_path = $this->protected_path.self::contacts_folder.'/';
 		$this->contacts_url = $this->protected_url.self::contacts_folder.'/';
+		$this->registry_path = $this->protected_path.self::registry_folder.'/';
+		$this->registry_url = $this->protected_url.self::registry_folder.'/';
 		$this->template_path = WB_PATH.'/modules/'.basename(dirname(__FILE__)).'/htt/';
 		$this->kit_installed = (file_exists(WB_PATH.'/modules/kit/class.contact.php')) ? true : false;
 		// check if $_SESSIONs are already defined - protect access by default!
@@ -981,7 +986,7 @@ class kitDirList {
 		global $parser;
 		global $kdlTools;
 		global $wb;
-		
+	echo $this->base_path;	
 		$is_admin = false;
 		$message = '';
 		if (isset($_SESSION[self::session_prefix.self::session_admin]) && $_SESSION[self::session_prefix.self::session_admin]) {

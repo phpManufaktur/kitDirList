@@ -1,6 +1,6 @@
 <!-- $Id$ -->
 <div class="kdl_upload_dialog">
-  <form name="kdl_upload" enctype="multipart/form-data" action="{$url}" method="POST">
+  <form name="kdl_upload" enctype="multipart/form-data" action="{$url}" method="post">
     <input type="hidden" name="{$action_name}" value="{$action_value}" />
     {$label_upload} <input name="{$file}" type="file" /> <input type="submit" value="{$btn_ok}" />
   </form>

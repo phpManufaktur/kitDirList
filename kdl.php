@@ -33,7 +33,6 @@ else {
 
 // first check if user is authenticated...
 
-//if (false == (isset($_SESSION['kdl_pct']) && isset($_SESSION['kdl_aut']) && isset($_SESSION['kdl_usr']) && isset($_GET['id']))) {
 if (false == (isset($_SESSION['kdl_pct']) && isset($_SESSION['kdl_aut']) && isset($_SESSION['kdl_usr']) && isset($_GET['id']))) {
 	// access not allowed
 	header($_SERVER['SERVER_PROTOCOL']." 403 Forbidden");
@@ -67,7 +66,8 @@ if (!file_exists($dirlist[dbKITdirList::field_path])) {
 
 // Datensatz aktualisieren
 $data = array(
-	dbKITdirList::field_count => $dirlist[dbKITdirList::field_count]+1
+	dbKITdirList::field_count => $dirlist[dbKITdirList::field_count]+1,
+	dbKITdirList::field_date => date('Y-m-d H:i:s')
 );
 $where = array(
 	dbKITdirList::field_id => $dirlist[dbKITdirlist::field_id]
