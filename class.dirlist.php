@@ -92,7 +92,7 @@ class kitDirList {
 		self::param_kit_auto		=> false,
 		self::param_upload			=> false,
 		self::param_unlink			=> false,
-		self::param_mkdir				=> false
+		self::param_mkdir				=> false,
 	);
 	
 	const session_prefix		= 'kdl_';
@@ -742,6 +742,7 @@ class kitDirList {
   			$_REQUEST[$key] = $this->xssPrevent($value);
   		}
   	}
+  	
   	// check the media paths
   	if (!$this->checkPaths()) return $this->show();
   	// check the session
@@ -986,7 +987,7 @@ class kitDirList {
 		global $parser;
 		global $kdlTools;
 		global $wb;
-	echo $this->base_path;	
+
 		$is_admin = false;
 		$message = '';
 		if (isset($_SESSION[self::session_prefix.self::session_admin]) && $_SESSION[self::session_prefix.self::session_admin]) {

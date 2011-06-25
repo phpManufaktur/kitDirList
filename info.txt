@@ -3,6 +3,10 @@ kitDirList
 Ralf Hertsch, Stockholmer Str. 31, 13359 Berlin (Germany)
 http://phpManufaktur.de - ralf.hertsch@phpManufaktur.de
 
+Release 0.21
+2011-06-24
+bugfix: removed prompt of media path
+
 Release 0.20
 2011-04-29
 added: support for kitRegistry 
