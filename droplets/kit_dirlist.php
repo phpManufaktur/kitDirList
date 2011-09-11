@@ -19,6 +19,7 @@ if (file_exists(WB_PATH.'/modules/kit_dirlist/class.dirlist.php')) {
   if (isset($kit_news)) $params[kitDirList::param_kit_news] = $kit_news;
   if (isset($kit_dist)) $params[kitDirList::param_kit_dist] = $kit_dist;
   if (isset($wb_group)) $params[kitDirList::param_wb_group] = $wb_group;
+  if (isset($page_link)) $params[kitDirList::param_page_link] = $page_link;
   $params[kitDirList::param_wb_auto] = (isset($wb_auto) && strtolower($wb_auto) == 'true') ? true : false;
   $params[kitDirList::param_kit_auto] = (isset($kit_auto) && strtolower($kit_auto) == 'true') ? true : false;
   $params[kitDirList::param_upload] = (isset($upload) && strtolower($upload) == 'true') ? true : false;

@@ -75,6 +75,7 @@ class kitDirList {
 	const param_upload			= 'upload';
 	const param_unlink			= 'unlink';
 	const param_mkdir				= 'mkdir';
+	const param_page_link		= 'page_link';
 	
 	// params come from the droplet [[kit_dirlist]]
 	private $params = array(
@@ -93,6 +94,7 @@ class kitDirList {
 		self::param_upload			=> false,
 		self::param_unlink			=> false,
 		self::param_mkdir				=> false,
+		self::param_page_link		=> ''
 	);
 	
 	const session_prefix		= 'kdl_';
@@ -220,6 +222,7 @@ class kitDirList {
 		foreach ($this->params as $key => $value) {
 			switch($key):
 			case self::param_media:
+			case self::param_page_link: 
 				$this->params[$key] = ''; break;
 			case self::param_wb_auto:
 			case self::param_kit_auto:
@@ -252,6 +255,15 @@ class kitDirList {
 					if ($skip_param_media) break;
 					if (!empty($value)) $value = $kdlTools->addSlash($value); 
 					$this->params[$key] = $value;
+					break;
+				case self::param_page_link:
+					if (!empty($value)) {
+						$this->params[$key] = $value;
+						$this->page_link = $value;
+					}
+					else {
+						$this->params[$key] = $this->page_link;
+					}
 					break;
 				case self::param_wb_auto:
 				case self::param_kit_auto: 
@@ -660,7 +672,8 @@ class kitDirList {
     * @param STR $error
     */
   public function setError($error) {
-  	$caller = next(debug_backtrace());
+  	$debug = debug_backtrace();
+  	$caller = next($debug);
   	$this->error = sprintf('[%s::%s - %s] %s', basename($caller['file']), $caller['function'], $caller['line'], $error);
   } // setError()
 
@@ -788,9 +801,15 @@ class kitDirList {
 			// display logout link if necessary...
 			$result = sprintf('<a name="%s"></a><div class="kdl_body"><div class="kdl_logout"><a href="%s">%s</a> &bull; <a href="%s">%s</a></div>%s</div>',
 												self::kdl_anchor,
-												sprintf('%s?%s=%s', $this->page_link, self::request_action, self::action_account),
+												sprintf('%s%s%s', 
+																$this->page_link, 
+																(strpos($this->page_link, '?') === false) ? '?' : '&',
+																http_build_query(array(self::request_action => self::action_account))),
 												kdl_btn_account,
-												sprintf('%s?%s=%s', $this->page_link, self::request_action, self::action_logout),
+												sprintf('%s%s%s', 
+																$this->page_link, 
+																(strpos($this->page_link, '?') === false) ? '?' : '&',
+																http_build_query(array(self::request_action => self::action_logout))),
 												kdl_btn_logout,
 												$result); 		
 		}
@@ -800,7 +819,10 @@ class kitDirList {
 			// display logout link if necessary...
 			$result = sprintf('<a name="%s"></a><div class="kdl_body"><div class="kdl_logout"><a href="%s">%s</a></div>%s</div>',
 												self::kdl_anchor,
-												sprintf('%s?%s=%s', $this->page_link, self::request_action, self::action_logout),
+												sprintf('%s%s%s', 
+																$this->page_link, 
+																(strpos($this->page_link, '?') === false) ? '?' : '&',
+																http_build_query(array(self::request_action => self::action_logout))),
 												kdl_btn_logout,
 												$result);
 		}
@@ -1103,7 +1125,8 @@ class kitDirList {
 			if (isset($_FILES[self::request_file]) && (is_uploaded_file($_FILES[self::request_file]['tmp_name']))) {
 				if ($_FILES[self::request_file]['error'] == UPLOAD_ERR_OK) {
 					// check if uploaded file is forbidden
-					$ext = end(explode('.', $_FILES[self::request_file]['name']));
+					$explode = explode('.', $_FILES[self::request_file]['name']);
+					$ext = end($explode);
 					if ((in_array($_FILES[self::request_file]['tmp_name'], $this->general_excluded_files)) ||
 							(in_array($ext, $this->general_excluded_extensions))) {
 						// disallowed file or filetype - delete uploaded file
@@ -1194,27 +1217,25 @@ class kitDirList {
 				if ($_REQUEST[self::request_unlink] == self::action_unlink_dir) {
 					$message .= sprintf(kdl_msg_confirm_unlink_dir,
 															$_REQUEST[self::request_unlink_item],
-															sprintf('%s?%s=%s&%s=%s&%s=%s%s',
+															sprintf('%s%s%s%s',
 																			$this->page_link,
-																			self::request_unlink,
-																			self::action_unlink_dir,
-																			self::request_unlink_confirm,
-																			self::action_unlink_confirmed,
-																			self::request_unlink_item,
-																			$_REQUEST[self::request_unlink_item],
+																			(strpos($this->page_link, '?') === false) ? '?' : '&',
+																			http_build_query(array(
+																				self::request_unlink	=> self::action_unlink_dir,
+																				self::request_unlink_confirm => self::action_unlink_confirmed,
+																				self::request_unlink_item => $_REQUEST[self::request_unlink_item])),
 																			($is_sub_dir) ? sprintf('&%s=%s', self::request_sub_dir, $sub_dir) : ''));
 				}
 				else {
 					$message .= sprintf(kdl_msg_confirm_unlink_file,
 															$_REQUEST[self::request_unlink_item],
-															sprintf('%s?%s=%s&%s=%s&%s=%s%s',
+															sprintf('%s%s%s%s',
 																			$this->page_link,
-																			self::request_unlink,
-																			self::action_unlink_file,
-																			self::request_unlink_confirm,
-																			self::action_unlink_confirmed,
-																			self::request_unlink_item,
-																			$_REQUEST[self::request_unlink_item],
+																			(strpos($this->page_link, '?') === false) ? '?' : '&',
+																			http_build_query(array(
+																				self::request_unlink => self::action_unlink_file,
+																				self::request_unlink_confirm => self::action_unlink_confirmed,
+																				self::request_unlink_item => $_REQUEST[self::request_unlink_item])),
 																			($is_sub_dir) ? sprintf('&%s=%s', self::request_sub_dir, $sub_dir) : ''));
 				}
 			}	
@@ -1240,12 +1261,22 @@ class kitDirList {
 		if ($files_sort == self::sort_asc) {
 			sort($dirs);
 			sort($files);
-			$sort_link = sprintf('%s?%s=%s#%s', $this->page_link, self::request_sort, self::sort_desc, self::kdl_anchor);
+			$sort_link = sprintf(	'%s%s%s#%s', 
+														$this->page_link, 
+														(strpos($this->page_link, '?') === false) ? '?' : '&',
+														http_build_query(array(
+															self::request_sort => self::sort_desc)), 
+														self::kdl_anchor);
 		}
 		else {
 			rsort($dirs);
 			rsort($files);
-			$sort_link = sprintf('%s?%s=%s#%s', $this->page_link, self::request_sort, self::sort_asc, self::kdl_anchor);
+			$sort_link = sprintf(	'%s%s%s#%s', 
+														$this->page_link, 
+														(strpos($this->page_link, '?') === false) ? '?' : '&',
+														http_build_query(array(
+															self::request_sort => self::sort_asc)), 
+														self::kdl_anchor);
 		}
 		if ($is_sub_dir) $sort_link = sprintf('%s&%s=%s', $sort_link, self::request_sub_dir, $sub_dir);
 		
@@ -1286,7 +1317,10 @@ class kitDirList {
 				$up = $this->page_link;
 				if (strpos($sub_dir, '/') > 0) {
 					$up = substr($sub_dir, 0, strrpos($sub_dir, '/'));
-					$up = sprintf('%s?%s=%s', $this->page_link, self::request_sub_dir, $up);					
+					$up = sprintf('%s%s%s', 
+												$this->page_link, 
+												(strpos($this->page_link, '?') === false) ? '?' : '&',
+												http_build_query(array(self::request_sub_dir => $up)));					
 				}
 				$file = sprintf('<a href="%s">%s</a>', 
 												$up, 
@@ -1374,10 +1408,11 @@ class kitDirList {
 				if (($redirect == false) && ($item == self::protection_folder)) continue;
 				$size = '';
 				$date = '';
-				$file = sprintf('<a href="%s?%s=%s">%s %s</a>', 
+				$file = sprintf('<a href="%s%s%s">%s %s</a>', 
 												$this->page_link, 
-												self::request_sub_dir, 
-												($is_sub_dir) ? $sub_dir.'/'.$item : $item, 
+												(strpos($this->page_link, '?') === false) ? '?' : '&',
+												http_build_query(array(
+													self::request_sub_dir => ($is_sub_dir) ? $sub_dir.'/'.$item : $item)), 
 												$icon = sprintf('<img src="%s" width="16" height="16" alt="%s" />',
 																				$this->icon_url.'folder.gif',
 																				kdl_alt_folder),
@@ -1394,8 +1429,9 @@ class kitDirList {
 													self::action_unlink_pending,
 													self::request_unlink_item,
 													$item);  
-				$unlink = sprintf('<a href="%s?%s"><img src="%s" width="16" height="16" alt="%s" /></a>',
+				$unlink = sprintf('<a href="%s%s%s"><img src="%s" width="16" height="16" alt="%s" /></a>',
 													$this->page_link,
+													(strpos($this->page_link, '?') === false) ? '?' : '&',
 													$params, 
 													$this->icon_url.'unlink.gif',
 													kdl_alt_unlink);	
@@ -1438,7 +1474,10 @@ class kitDirList {
 			$max_size = $kdlTools->bytes2Str($max_size);
 			
 			$data = array(
-				'url'						=> ($is_sub_dir) ? sprintf('%s?%s=%s', $this->page_link, self::request_sub_dir, $sub_dir) : $this->page_link,
+				'url'						=> ($is_sub_dir) ? sprintf(	'%s%s%s', 
+																										$this->page_link, 
+																										(strpos($this->page_link, '?') === false) ? '?' : '&',
+																										http_build_query(array(self::request_sub_dir => $sub_dir))) : $this->page_link,
 				'action_name'		=> self::request_action,
 				'action_value'	=> self::action_upload,
 				'label_upload'	=> sprintf(kdl_label_upload, $max_size),
@@ -1454,7 +1493,10 @@ class kitDirList {
 		// create directories allowed?
 		if ($this->params[self::param_mkdir]) {
 			$data = array(
-				'url'						=> ($is_sub_dir) ? sprintf('%s?%s=%s', $this->page_link, self::request_sub_dir, $sub_dir) : $this->page_link,
+				'url'						=> ($is_sub_dir) ? sprintf( '%s%s%s', 
+																										$this->page_link, 
+																										(strpos($this->page_link, '?') === false) ? '?' : '&',
+																										http_build_query(array(self::request_sub_dir => $sub_dir))) : $this->page_link,
 				'label_mkdir'		=> kdl_label_mkdir,
 				'mkdir_name'		=> self::request_mkdir,
 				'btn_mkdir'			=> kdl_btn_mkdir
