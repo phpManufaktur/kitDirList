@@ -32,19 +32,22 @@ fixed: code cleanup and bug fixing for the new release 0.16 features
 
 Release 0.16
 2011-03-11
-added: params wb_auto=true and kit_auto=true automatically creates directories for each user. User can access to their directory by log in over KIT or WB
+added: params wb_auto=true and kit_auto=true automatically creates directories 
+  for each user. User can access to their directory by log in over KIT or WB
 added: param upload=true allow to upload files into the desired directory
 added: param unlink=true allow to delete files or directories (recursive)
 added: param mkdir=true allow to create directories
 
 Release 0.15
 2011-02-18
-fixed: security leak if user is switching from public directory to protected directory
+fixed: security leak if user is switching from public directory to protected 
+  directory
 
 Release 0.14
 2011-02-18
 added: english README.txt with a brief description of kitDirList
-added: english language file EN.php - many thanks to Armin Ipfelkofer for translation!
+added: english language file EN.php - many thanks to Armin Ipfelkofer for 
+  translation!
 
 Release 0.13
 2011-02-15
