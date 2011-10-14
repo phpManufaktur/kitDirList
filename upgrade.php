@@ -52,6 +52,11 @@ if ($message != "") {
   echo '<script language="javascript">alert ("'.$message.'");</script>';
 }
 
+if (file_exists(WB_PATH.'/modules/'.basename(dirname(__FILE__)).'/frontend.css')) {
+	// unlink this old CSS file
+	@unlink(WB_PATH.'/modules/'.basename(dirname(__FILE__)).'/frontend.css');
+}
+
 // Prompt Errors
 if (!empty($error)) {
 	global $admin;
