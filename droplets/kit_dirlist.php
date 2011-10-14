@@ -28,6 +28,10 @@ if (file_exists(WB_PATH.'/modules/kit_dirlist/class.dirlist.php')) {
   $params[kitDirList::param_copyright] = (isset($copyright) && strtolower($copyright) == 'false') ? false : true;
   $params[kitDirList::param_recursive] = (isset($recursive) && strtolower($recursive) == 'true') ? true : false;
   $params[kitDirList::param_sort] = (isset($sort) && strtolower($sort) == 'desc') ? 'desc' : 'asc';
+  $params[kitDirList::param_login_dlg] = (isset($login_dlg)) ? strtolower($login_dlg) : 'kit_login';
+  $params[kitDirList::param_account_dlg] = (isset($account_dlg)) ? strtolower($account_dlg) : 'kit_account';
+  $params[kitDirList::param_hide_account] = (isset($hide_account) && strtolower($hide_account) == 'true') ? true : false;
+  $params[kitDirList::param_css] = (isset($css) && strtolower($css) == 'false') ? false : true;
   $dirList->setParams($params);
   return $dirList->action();
 }

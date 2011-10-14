@@ -12,8 +12,25 @@
  * FOR VERSION- AND RELEASE NOTES PLEASE LOOK AT INFO.TXT!
  */
 
-// prevent this file from being accessed directly
-if (!defined('WB_PATH')) die('invalid call of '.$_SERVER['SCRIPT_NAME']);
+// include class.secure.php to protect this file and the whole CMS!
+if (defined('WB_PATH')) {	
+	if (defined('LEPTON_VERSION')) include(WB_PATH.'/framework/class.secure.php'); 
+} else {
+	$oneback = "../";
+	$root = $oneback;
+	$level = 1;
+	while (($level < 10) && (!file_exists($root.'/framework/class.secure.php'))) {
+		$root .= $oneback;
+		$level += 1;
+	}
+	if (file_exists($root.'/framework/class.secure.php')) { 
+		include($root.'/framework/class.secure.php'); 
+	} else {
+		trigger_error(sprintf("[ <b>%s</b> ] Can't include class.secure.php!", $_SERVER['SCRIPT_NAME']), E_USER_ERROR);
+	}
+}
+// end include class.secure.php
+
 
 // include language file
 if(!file_exists(WB_PATH.'/modules/'.basename(dirname(__FILE__)).'/languages/'.LANGUAGE.'.php')) {
@@ -76,6 +93,10 @@ class kitDirList {
 	const param_unlink			= 'unlink';
 	const param_mkdir				= 'mkdir';
 	const param_page_link		= 'page_link';
+	const param_login_dlg		= 'login_dlg';
+	const param_account_dlg = 'account_dlg';
+	const param_hide_account= 'hide_account';
+	const param_css					= 'css';
 	
 	// params come from the droplet [[kit_dirlist]]
 	private $params = array(
@@ -94,7 +115,11 @@ class kitDirList {
 		self::param_upload			=> false,
 		self::param_unlink			=> false,
 		self::param_mkdir				=> false,
-		self::param_page_link		=> ''
+		self::param_page_link		=> '',
+		self::param_login_dlg		=> 'kit_login',
+		self::param_account_dlg => 'kit_account',
+		self::param_hide_account=> false,
+		self::param_css					=> true, 
 	);
 	
 	const session_prefix		= 'kdl_';
@@ -230,8 +255,10 @@ class kitDirList {
 			case self::param_upload:
 			case self::param_unlink:
 			case self::param_mkdir:
+			case self::param_hide_account:
 				$this->params[$key] = false; break;
 			case self::param_copyright:
+			case self::param_css:
 				$this->params[$key] = true; break;
 			case self::param_include:
 			case self::param_exclude:
@@ -242,6 +269,10 @@ class kitDirList {
 				$this->params[$key] = ''; break;
 			case self::param_sort:
 				$this->params[$key] = self::sort_asc; break;
+			case self::param_login_dlg:
+				$this->params[$key] = 'kit_login'; break;
+			case self::param_account_dlg:
+				$this->params[$key] = 'kit_account'; break;
 			default:
 				$this->params[$key] = 'undefined'; break;
 			endswitch;
@@ -279,6 +310,8 @@ class kitDirList {
 				case self::param_upload:
 				case self::param_unlink:
 				case self::param_mkdir:
+				case self::param_hide_account:
+				case self::param_css:
 					$this->params[$key] = (bool) $value;
 					break;
 				case self::param_kit_intern:
@@ -313,7 +346,11 @@ class kitDirList {
 					break;
 				case self::param_sort:
 					$this->params[$key] = (strtolower($value) == self::sort_asc) ? self::sort_asc : self::sort_desc;
-					break;	
+					break;
+				case self::param_account_dlg:	
+				case self::param_login_dlg:
+					$this->params[$key] = strtolower($value);
+					break;
 				endswitch;
 			}	
 			else {
@@ -441,11 +478,12 @@ class kitDirList {
 	 * Check the authentication by the desired access method.
 	 * Set the different $_SESSION vars for further checks and controls
 	 * @return BOOL true on success or STR login dialog or error message
-	 */
+	 */	
 	private function checkAuthentication() {
 		global $kdlTools;
 		global $parser;
 		global $wb;
+		global $kitContactInterface;
 		
 		if ($_SESSION[self::session_prefix.self::session_protect] == self::protect_none) {
 			// no protection needed
@@ -459,50 +497,17 @@ class kitDirList {
 				$this->setError(kdl_error_kit_not_installed);
 				return $this->getError();
 			}
-			if (isset($_SESSION['kit_aid']) && isset($_SESSION['kit_key'])) { 
-				// KIT User ist bereits angemeldet
-				require_once(WB_PATH.'/modules/kit/initialize.php');
-				global $dbContact;
-				global $dbRegister;
-				$where = array(
-					dbKITregister::field_id => $_SESSION['kit_aid'],
-					dbKITregister::field_status => dbKITregister::status_active
-				);
-				$register = array();
-				if (!$dbRegister->sqlSelectRecord($where, $register)) {
-					$this->setError($dbRegister->getError());
-					return $this->getError();
-				}				
-				if (count($register) < 1) {
-					$this->setError(sprintf(kdl_error_kit_register_id_missing, $_SESSION['kit_aid']));
-					return $this->getError();
-				}
-				$register = $register[0];
-				// E-Mail Adresse des Users festhalten
-				$_SESSION[self::session_prefix.self::session_user] = $register[dbKITregister::field_email];
-				// read contact
-				$contact = array();
-				if (!$dbContact->getContactByID($register[dbKITregister::field_contact_id], $contact)) {
-					$this->setError($dbContact->getError());
-					return $this->getError();
-				}
-				if (count($contact) < 1) {
-					$this->setError(sprintf(kdl_error_kit_id_missing, $register[0][dbKITregister::field_contact_id]));
-					return $this->getError();
-				}
+			// include the KIT interface
+			require_once WB_PATH.'/modules/kit/class.interface.php'; 
+			if ($kitContactInterface->isAuthenticated()) {
+				// user is already authenticated by KIT
 				if ($_SESSION[self::session_prefix.self::param_kit_auto] == false) {
-					// Kategorien des Users nur pruefen, wenn kit_auto NICHT aktiv ist
-					$kg = $contact[dbKITcontact::field_category];
-					if (!empty($contact[dbKITcontact::field_distribution])) {
-						if (!empty($kg)) $kg .= ',';
-						$kg .= $contact[dbKITcontact::field_distribution];
+					// check categories only if kit_auto is not active
+					$categories = array();
+					if (!$kitContactInterface->getCategories($_SESSION[kitContactInterface::session_kit_contact_id], $categories)) {
+						$this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, $kitContactInterface->getError()));
+						return $this->getError();
 					}
-					if (!empty($contact[dbKITcontact::field_newsletter])) {
-						if (!empty($kg)) $kg .= ',';
-						$kg .= $contact[dbKITcontact::field_newsletter];
-					}
-					$kit_groups = explode(',', $kg);
-					
 					$grps = $_SESSION[self::session_prefix.self::param_kit_dist]; 
 					if (!empty($_SESSION[self::session_prefix.self::param_kit_intern])) {
 						if (!empty($grps)) $grps .= ',';
@@ -515,13 +520,13 @@ class kitDirList {
 					$groups = explode(',', $grps);
 					$group_ok = false;
 					foreach ($groups as $group) {
-						if (in_array($group, $kit_groups)) {
+						if (in_array($group, $categories)) {
 							$group_ok = true;
 							break;
 						}
 					}
 					if (!$group_ok) {
-						// nicht berechtigt
+						// user is not allowed to access
 						$data = array(
 							'header'		=> kdl_header_access_denied,
 							'content'		=> kdl_msg_access_denied
@@ -529,22 +534,39 @@ class kitDirList {
 						return $parser->get($this->template_path.'frontend.prompt.htt', $data);
 					}
 				}
+				// get the user contact data
+				$contact = array();
+				if (!$kitContactInterface->getContact($_SESSION[kitContactInterface::session_kit_contact_id], $contact)) {
+					$this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, $kitContactInterface->getError()));
+					return $this->getError();
+				}
+				// E-Mail Adresse des Users festhalten
+				$_SESSION[self::session_prefix.self::session_user] = $contact[kitContactInterface::kit_email];
+			
 				// Benutzer freigeben
 				$_SESSION[self::session_prefix.self::session_auth] = 1;
 				$this->is_authenticated = true;
-				
+			
 				// check if user is admin...
 				$admin_emails = array();
-				if ($dbRegister->getAdmins($admin_emails) && (in_array($_SESSION[self::session_prefix.self::session_user], $admin_emails))) { 
+				if (method_exists($kitContactInterface, 'getAdmins')) {
+					// method exists since KIT 0.46
+					$kitContactInterface->getAdmins($admin_emails);
+				}
+				else {
+					global $dbRegister;
+					$dbRegister->getAdmins($admin_emails);
+				}
+				if (in_array($_SESSION[self::session_prefix.self::session_user], $admin_emails)) { 
 					$_SESSION[self::session_prefix.self::session_admin] = true;
 				} 
 				return true;
-			}
+			} // isAuthenticated()
 			else {
-				// KIT User ist nicht angemeldet
-				return $this->dlgKITaccount();
-			}			
-		}
+				// not authenticated, show login dialog
+				return $this->loginDlg();
+			}
+		} 
 		elseif ($_SESSION[self::session_prefix.self::session_protect] == self::protect_group) {
 			// Protection by WB Group
 			if (!$wb->is_authenticated()) {
@@ -624,47 +646,74 @@ class kitDirList {
 		}
 	} // checkAuthentication()
 	
-	public function dlgKITaccount($action='') {
-		global $dbCfg; // KIT config
-		global $dbDialogsRegister;
-		global $kdlTools;
+	/**
+	 * Call kit_form and show a login dialog
+	 * 
+	 * @return MIXED BOOL true on success or STR dialog/error 
+	 */
+	public function loginDlg() {
+		
 		if (!$this->kit_installed) {
 			$this->setError(kdl_error_kit_not_installed);
 			return $this->getError();
 		}
-		// get KIT Dialog Framework
-		require_once(WB_PATH.'/modules/kit/class.dialogs.php');
-		// get the KIT Account dialog which should be used
-  	$dialog_account = $dbCfg->getValue(dbKITcfg::cfgRegisterDlgACC);
-  	$where = array(dbKITdialogsRegister::field_name => $dialog_account);
-  	$regDialogs = array();
-  	if (!$dbDialogsRegister->sqlSelectRecord($where, $regDialogs)) {
-  		$this->setError($dbDialogsRegister->getError());
-  		return $this->getError();
-  	}
-  	if (count($regDialogs) < 1) {
-  		$this->setError(sprintf(kit_error_dlg_missing, $dialog_account));
-  		return $this->getError();
-  	}
-		if (file_exists(WB_PATH.'/modules/kit/dialogs/'.strtolower($dialog_account).'/'.strtolower($dialog_account).'.php')) {
-  		require_once(WB_PATH.'/modules/kit/dialogs/'.strtolower($dialog_account).'/'.strtolower($dialog_account).'.php');
-  		// call Account Dialog				
-  		unset($_SESSION['KIT_REDIRECT']);
-  		$_SESSION['KIT_EXTENSION'] = array('link' => $this->page_link, 'name' => MENU_TITLE);
-			$callDialog = new $dialog_account(true);
-			$callDialog->setDlgID($regDialogs[0][dbKITdialogsRegister::field_id]);
-			if (!empty($action)) $_REQUEST['acc_act'] = $action;
-			$result = $callDialog->action();
-			$url = '';				
-			$kdlTools->getPageLinkByPageID(PAGE_ID, $url);
-			$_SESSION['KIT_REDIRECT'] = $url;
+		// need kit_form	
+		require_once(WB_PATH.'/modules/kit_form/class.frontend.php');
+		
+		// new instance of kitForm
+		$form = new formFrontend();
+		// get the params array of kitForm
+		$params = $form->getParams();
+		// set the needed params
+		$params[formFrontend::param_form] = $this->params[self::param_login_dlg];
+		$params[formFrontend::param_return] = true;
+		$form->setParams($params);
+		
+		$result = $form->action();
+		if (is_string($result)) {
+			// return the dialog
 			return $result;
 		}
-		else {
-			$this->setError(sprintf(kit_error_dlg_missing, $dialog));
+		elseif (is_bool($result) && ($result == false) && $form->isError()) {
+			// error while executing the kitForm dialog
+			$this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, $form->getError())); 
 			return $this->getError();
-		}  		
-	} // dlgKITaccount()
+		}
+		elseif (is_bool($result) && ($result == true)) {
+			// the user is logged in, now check if he is allowed to access kitDirList
+			return $this->checkAuthentication(); 
+		}
+		else {
+			// Oooops, unspecified problem ...
+			$this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, idea_error_undefined));
+			return $this->getError();
+		}
+	} // loginDlg()
+	
+	/**
+	 * Call kitForm and show the KIT user account dialog
+	 * 
+	 * @return STR dialog
+	 */
+	public function accountDlg() {
+		if (!$this->kit_installed) {
+			$this->setError(kdl_error_kit_not_installed);
+			return $this->getError();
+		}
+		// need kit_form	
+		require_once(WB_PATH.'/modules/kit_form/class.frontend.php');
+		
+		// create new instance of kitForm
+		$form = new formFrontend();
+		// get the params array
+		$params = $form->getParams();
+		// set the needed params
+		$params[formFrontend::param_form] = $this->params[self::param_account_dlg];
+		$params[formFrontend::param_return] = true;
+		$form->setParams($params);
+		// return the user account dialog
+		return $form->action();		
+	} // accountDlg()
 	
 	/**
     * Set $this->error to $error
@@ -765,13 +814,23 @@ class kitDirList {
   	// check authentication and return login if neccessary...
   	if ((!$this->is_authenticated) && (is_string($login = $this->checkAuthentication()))) return $login;
   	
+  	// CSS laden? 
+		if ($this->params[self::param_css]) {
+			if (!is_registered_droplet_css('kit_dirlist', PAGE_ID)) {
+				register_droplet_css('kit_dirlist', PAGE_ID, 'kit_dirlist', 'kit_dirlist.css');
+			}
+		} elseif (is_registered_droplet_css('kit_dirlist', PAGE_ID)) {
+			unregister_droplet_css('kit_dirlist', PAGE_ID);
+		}
+		
+  	
   	$account = false;
   	switch ($action):
 		case self::action_logout:
 			$result = $this->logout();
 			break;
 		case self::action_account:
-			$result = $this->dlgKITaccount();
+			$result = $this->accountDlg(); //$this->dlgKITaccount();
 			$account = true;
 			break;
 		case self::action_start:
@@ -796,8 +855,12 @@ class kitDirList {
 												'Please visit <a href="http://phpmanufaktur.de" target="_blank">phpManufaktur</a> for more informations about <a href="http://phpmanufaktur.de/kit_dirlist" target="_blank">kitDirList</a>.</div>', 
 												$result, $this->getVersion(), date('Y'));
 		}
-		if (!$account && isset($_SESSION[self::session_prefix.self::session_protect]) &&
-				($_SESSION[self::session_prefix.self::session_protect] == self::protect_kit)) {
+		if ($this->params[self::param_hide_account]) {
+			// don't show login and account link
+			$result = sprintf('<a name="%s"></a><div class="kdl_body">%s</div>', self::kdl_anchor, $result);
+		}
+		elseif (!$account && isset($_SESSION[self::session_prefix.self::session_protect]) &&
+			($_SESSION[self::session_prefix.self::session_protect] == self::protect_kit)) {
 			// display logout link if necessary...
 			$result = sprintf('<a name="%s"></a><div class="kdl_body"><div class="kdl_logout"><a href="%s">%s</a> &bull; <a href="%s">%s</a></div>%s</div>',
 												self::kdl_anchor,
@@ -827,12 +890,19 @@ class kitDirList {
 												$result);
 		}
 		else {
+			// simply show the filelist ...
 			$result = sprintf('<a name="%s"></a><div class="kdl_body">%s</div>', self::kdl_anchor, $result);
 		}
+	
 		if ($this->silent) return $result;
 		echo $result;
 	} // show()
 	
+	/**
+	 * Logout from WB, LEPTON or KIT
+	 * 
+	 * @return STR dialog 
+	 */
 	public function logout() {		
 		// unset all session vars...
 		unset($_SESSION[self::session_prefix.self::session_user]);
@@ -851,7 +921,7 @@ class kitDirList {
 		elseif ($_SESSION[self::session_prefix.self::session_protect] == self::protect_kit) {
 			// KeepInTouch Logout
 			unset($_SESSION[self::session_prefix.self::session_protect]);
-			return $this->dlgKITaccount('out');			
+			return $this->loginDlg();
 		}
 		// otherwise only unset the protected session...
 		unset($_SESSION[self::session_prefix.self::session_protect]);
@@ -1050,7 +1120,6 @@ class kitDirList {
 		else {
 			$redirect = false;
 		}
-		
 		// email address
 		if (isset($_SESSION[self::session_prefix.self::session_user]) && !empty($_SESSION[self::session_prefix.self::session_user])) {
 			$email = $_SESSION[self::session_prefix.self::session_user];
@@ -1153,8 +1222,10 @@ class kitDirList {
 								// if use KIT authtentification send 
 								require_once(WB_PATH.'/modules/kit/class.config.php');
 								$dbKITcfg = new dbKITcfg();
-								$to_emails = $dbKITcfg->getValue(dbKITcfg::cfgKITadmins);	
-								if (count($to_emails) < 1) $to_emails = array(SERVER_EMAIL);						
+								$to_emails = $dbKITcfg->getValue(dbKITcfg::cfgKITadmins);
+								if ((count($to_emails) < 1) || empty($to_emails[0])) {
+									$to_emails = array(SERVER_EMAIL);						
+								}
 							}
 							foreach ($to_emails as $to_email) {
 								if (!$wb->mail(SERVER_EMAIL, $to_email, kdl_text_upload_subject, $body)) {

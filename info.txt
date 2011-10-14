@@ -3,6 +3,16 @@ kitDirList
 Ralf Hertsch, Stockholmer Str. 31, 13359 Berlin (Germany)
 http://phpManufaktur.de - ralf.hertsch@phpManufaktur.de
 
+Release 0.23
+2011-10-14
+changed: kitDirList now uses kitForm for login and the account dialog
+added: param account_hide hide the account and logout link
+added: param login_dlg enables to choose a kitForm dialog for the login
+added: param account_dlg enables to choose a kitForm dialog for the KIT account
+added: kitDirList now uses the functionally of dropletsExtension
+added: param css enables to switch css support on/off
+added: uses now the LEPTON class.secure.php
+
 Release 0.22
 2011-09-11
 added: param page_link to set the link with individual parameters
