@@ -48,29 +48,32 @@ if (!is_object($parser)) $parser = new Dwoo();
 // include dbConnect
 if (!class_exists('dbConnectLE')) require_once(WB_PATH.'/modules/dbconnect_le/include.php');
 
-require_once(WB_PATH.'/modules/'.basename(dirname(__FILE__)).'/class.tools.php');
-require_once(WB_PATH.'/modules/'.basename(dirname(__FILE__)).'/class.mimetypes.php');
-require_once(WB_PATH.'/modules/'.basename(dirname(__FILE__)).'/class.link.php');
-require_once(WB_PATH.'/framework/functions.php');
-require_once(WB_PATH.'/framework/class.wb.php');
+require_once(WB_PATH . '/modules/'.basename(dirname(__FILE__)).'/class.tools.php');
+require_once(WB_PATH . '/modules/'.basename(dirname(__FILE__)).'/class.mimetypes.php');
+require_once(WB_PATH . '/modules/'.basename(dirname(__FILE__)).'/class.link.php');
+require_once(WB_PATH . '/framework/functions.php');
+require_once(WB_PATH . '/framework/class.wb.php');
+
+// include dropletsExtension
+require_once (WB_PATH . '/modules/droplets_extension/interface.php');
 
 class kitDirList {
 	
-	const request_action					= 'act';
-	const request_sort						= 'sort';
-	const request_sub_dir					= 'sd';
-	const request_file						= 'ufile';
-	const request_mkdir						= 'mkd';
-	const request_unlink					= 'ul';
-	const request_unlink_item			= 'uli';
+	const request_action			= 'act';
+	const request_sort				= 'sort';
+	const request_sub_dir			= 'sd';
+	const request_file				= 'ufile';
+	const request_mkdir				= 'mkd';
+	const request_unlink			= 'ul';
+	const request_unlink_item		= 'uli';
 	const request_unlink_confirm	= 'ulc';
 	
-	const action_start						= 'go';
-	const action_logout						= 'out';
-	const action_account					= 'acc';
-	const action_upload						= 'upl';
-	const action_unlink_file			= 'ulf';
-	const action_unlink_dir				= 'uld';
+	const action_start				= 'go';
+	const action_logout				= 'out';
+	const action_account			= 'acc';
+	const action_upload				= 'upl';
+	const action_unlink_file		= 'ulf';
+	const action_unlink_dir			= 'uld';
 	const action_unlink_pending		= 'ulp';
 	const action_unlink_confirmed	= 'ulc';
 	
@@ -78,48 +81,48 @@ class kitDirList {
 	const sort_desc					= 'desc';
 	
 	const param_media				= 'media';
-	const param_recursive		= 'recursive';
-	const param_include			= 'include';
-	const param_exclude			= 'exclude';
-	const param_kit_intern	= 'kit_intern';
-	const param_kit_news		= 'kit_news';
-	const param_kit_dist		= 'kit_dist';
-	const param_wb_group		= 'wb_group';
-	const param_copyright		= 'copyright';
+	const param_recursive			= 'recursive';
+	const param_include				= 'include';
+	const param_exclude				= 'exclude';
+	const param_kit_intern			= 'kit_intern';
+	const param_kit_news			= 'kit_news';
+	const param_kit_dist			= 'kit_dist';
+	const param_wb_group			= 'wb_group';
+	const param_copyright			= 'copyright';
 	const param_sort				= 'sort';
-	const param_wb_auto			= 'wb_auto';
-	const param_kit_auto		= 'kit_auto';
-	const param_upload			= 'upload';
-	const param_unlink			= 'unlink';
+	const param_wb_auto				= 'wb_auto';
+	const param_kit_auto			= 'kit_auto';
+	const param_upload				= 'upload';
+	const param_unlink				= 'unlink';
 	const param_mkdir				= 'mkdir';
-	const param_page_link		= 'page_link';
-	const param_login_dlg		= 'login_dlg';
-	const param_account_dlg = 'account_dlg';
-	const param_hide_account= 'hide_account';
+	const param_page_link			= 'page_link';
+	const param_login_dlg			= 'login_dlg';
+	const param_account_dlg 		= 'account_dlg';
+	const param_hide_account		= 'hide_account';
 	const param_css					= 'css';
 	
 	// params come from the droplet [[kit_dirlist]]
 	private $params = array(
-		self::param_media				=> '',
+		self::param_media			=> '',
 		self::param_recursive		=> false,
 		self::param_include			=> '',
 		self::param_exclude			=> '',
-		self::param_kit_intern	=> '',
+		self::param_kit_intern		=> '',
 		self::param_kit_news		=> '',
 		self::param_kit_dist		=> '',
 		self::param_wb_group		=> '',
 		self::param_copyright		=> true,
-		self::param_sort				=> self::sort_asc,
+		self::param_sort			=> self::sort_asc,
 		self::param_wb_auto			=> false,
 		self::param_kit_auto		=> false,
 		self::param_upload			=> false,
 		self::param_unlink			=> false,
-		self::param_mkdir				=> false,
+		self::param_mkdir			=> false,
 		self::param_page_link		=> '',
 		self::param_login_dlg		=> 'kit_login',
-		self::param_account_dlg => 'kit_account',
-		self::param_hide_account=> false,
-		self::param_css					=> true, 
+		self::param_account_dlg 	=> 'kit_account',
+		self::param_hide_account	=> false,
+		self::param_css				=> true, 
 	);
 	
 	const session_prefix		= 'kdl_';
@@ -130,16 +133,16 @@ class kitDirList {
 	const session_admin			= 'adm';
 	
 	const protect_none			= 'nn';
-	const protect_undefined	= 'udf';
+	const protect_undefined		= 'udf';
 	const protect_group			= 'grp';
-	const protect_kit				= 'kit';
-	const protect_wb				= 'wb';
+	const protect_kit			= 'kit';
+	const protect_wb			= 'wb';
 	
-	const protection_folder = 'kit_protected';
+	const protection_folder 	= 'kit_protected';
 	const contacts_folder		= 'contacts';
 	const registry_folder		= 'registry';
-	const kdl_anchor				= 'kdl';
-	const description_file 	= 'dirlist.txt';
+	const kdl_anchor			= 'kdl';
+	const description_file 		= 'dirlist.txt';
 	
 	private $message = '';
 	private $error = '';
@@ -206,27 +209,27 @@ class kitDirList {
 	} // __construct()
 	
 	/**
-   * Return Version of Module
-   *
-   * @return FLOAT
-   */
-  public function getVersion() {
-    // read info.php into array
-    $info_text = file(WB_PATH.'/modules/'.basename(dirname(__FILE__)).'/info.php');
-    if ($info_text == false) {
-      return -1; 
-    }
-    // walk through array
-    foreach ($info_text as $item) {
-      if (strpos($item, '$module_version') !== false) {
-        // split string $module_version
-        $value = explode('=', $item);
-        // return floatval
-        return floatval(preg_replace('([\'";,\(\)[:space:][:alpha:]])', '', $value[1]));
-      } 
-    }
-    return -1;
-  } // getVersion()
+	 * Return Version of Module
+     *
+     * @return FLOAT
+    */
+	public function getVersion() {
+	    // read info.php into array
+	    $info_text = file(WB_PATH.'/modules/'.basename(dirname(__FILE__)).'/info.php');
+	    if ($info_text == false) {
+	      return -1; 
+	    }
+	    // walk through array
+	    foreach ($info_text as $item) {
+	      if (strpos($item, '$module_version') !== false) {
+	        // split string $module_version
+	        $value = explode('=', $item);
+	        // return floatval
+	        return floatval(preg_replace('([\'";,\(\)[:space:][:alpha:]])', '', $value[1]));
+	      } 
+	    }
+	    return -1;
+	} // getVersion()
 	
 	/**
 	 * returns the parameters
@@ -720,11 +723,11 @@ class kitDirList {
     * 
     * @param STR $error
     */
-  public function setError($error) {
-  	$debug = debug_backtrace();
-  	$caller = next($debug);
-  	$this->error = sprintf('[%s::%s - %s] %s', basename($caller['file']), $caller['function'], $caller['line'], $error);
-  } // setError()
+	public function setError($error) {
+	  	$debug = debug_backtrace();
+	  	$caller = next($debug);
+	  	$this->error = sprintf('[%s::%s - %s] %s', basename($caller['file']), $caller['function'], $caller['line'], $error);
+	} // setError()
 
   /**
     * Get Error from $this->error;
@@ -949,10 +952,11 @@ class kitDirList {
 				require_once(WB_PATH.'/modules/kit/class.config.php');
 				require_once(WB_PATH.'/modules/kit/class.contact.php');
 				global $dbRegister;
-				$SQL = sprintf( "SELECT * FROM %s WHERE %s='%s'",
-												$dbRegister->getTableName(),
-												dbKITregister::field_status,
-												dbKITregister::status_active);
+				$SQL = sprintf("SELECT * FROM %s WHERE %s='%s'",
+							   $dbRegister->getTableName(),
+							   dbKITregister::field_status,
+							   dbKITregister::status_active);
+				$registers = array();
 				if (!$dbRegister->sqlExec($SQL, $registers)) {
 					$this->setError($dbRegister->getError());
 					return false;
@@ -985,12 +989,13 @@ class kitDirList {
 				$admin_grp = $admin_grps[0][dbWBgroups::field_group_id];
 				
 				$dbUsers = new dbWBusers();
-				$SQL = sprintf( "SELECT * FROM %s WHERE %s='%s' AND %s!='%s'",
-												$dbUsers->getTableName(),
-												dbWBusers::field_active,
-												dbWBusers::status_active,
-												dbWBusers::field_group_id,
-												$admin_grp);
+				$SQL = sprintf("SELECT * FROM %s WHERE %s='%s' AND %s!='%s'",
+						       $dbUsers->getTableName(),
+						       dbWBusers::field_active,
+							   dbWBusers::status_active,
+							   dbWBusers::field_group_id,
+							   $admin_grp);
+				$users = array();
 				if (!$dbUsers->sqlExec($SQL, $users)) {
 					$this->setError($dbUsers->getError());
 					return false;
