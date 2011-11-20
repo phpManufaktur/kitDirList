@@ -100,6 +100,9 @@ class kitDirList {
 	const param_account_dlg 		= 'account_dlg';
 	const param_hide_account		= 'hide_account';
 	const param_css					= 'css';
+	const param_idea_project_id     = 'idea_project_id'; // special: interaction with kitIdea
+	const param_idea_project_group  = 'idea_project_group'; // special: interaction with kitIdea
+	const param_use_idea_status     = 'use_idea_status'; // special: interaction with kitIdea
 	
 	// params come from the droplet [[kit_dirlist]]
 	private $params = array(
@@ -123,6 +126,9 @@ class kitDirList {
 		self::param_account_dlg 	=> 'kit_account',
 		self::param_hide_account	=> false,
 		self::param_css				=> true, 
+	    self::param_idea_project_group => -1,
+	    self::param_idea_project_id => -1,
+	    self::param_use_idea_status => false
 	);
 	
 	const session_prefix		= 'kdl_';
@@ -315,6 +321,7 @@ class kitDirList {
 				case self::param_mkdir:
 				case self::param_hide_account:
 				case self::param_css:
+				case self::param_use_idea_status:
 					$this->params[$key] = (bool) $value;
 					break;
 				case self::param_kit_intern:
@@ -354,6 +361,10 @@ class kitDirList {
 				case self::param_login_dlg:
 					$this->params[$key] = strtolower($value);
 					break;
+				case self::param_idea_project_group:
+				case self::param_idea_project_id:
+				    $this->params[$key] = $value;
+				    break;
 				endswitch;
 			}	
 			else {
@@ -1213,30 +1224,49 @@ class kitDirList {
 						if (!move_uploaded_file($tmp_file, $upl_file)) {
 							// error moving file
 							$this->setError(sprintf(kdl_error_upload_move_file, $upl_file)); 
-							return false;
+							return false; 
 						}
 						else {
 							$message .= sprintf(kdl_msg_upload_success, basename($upl_file));
-							$data = array(
-								'email' => (empty($email)) ? kdl_text_anonymous : $email,
-								'file'	=> basename($upl_file) 
-							);
-							$body = $parser->get($this->template_path.'mail.upload.success.admin.htt', $data);
-							$to_emails = array(SERVER_EMAIL);
-							if ($_SESSION[self::session_prefix.self::session_protect] == self::protect_kit) {
-								// if use KIT authtentification send 
-								require_once(WB_PATH.'/modules/kit/class.config.php');
-								$dbKITcfg = new dbKITcfg();
-								$to_emails = $dbKITcfg->getValue(dbKITcfg::cfgKITadmins);
-								if ((count($to_emails) < 1) || empty($to_emails[0])) {
-									$to_emails = array(SERVER_EMAIL);						
-								}
-							}
-							foreach ($to_emails as $to_email) {
-								if (!$wb->mail(SERVER_EMAIL, $to_email, kdl_text_upload_subject, $body)) {
-									$this->setError(sprintf(kdl_error_send_mail, SERVER_EMAIL));
-									return false;
-								}
+							if ($this->params[self::param_use_idea_status]) {
+							    // kitDirList is connected to kitIdea, so give kitIdea the message...
+							    require_once WB_PATH.'/modules/kit_idea/class.idea.php';
+							    $dbIdeaStatusChange = new dbIdeaStatusChange();
+							    $data = array(
+							            dbIdeaStatusChange::FIELD_ARTICLE_ID => -1,
+							            dbIdeaStatusChange::FIELD_KIT_ID => (isset($_SESSION[kitContactInterface::session_kit_contact_id])) ? $_SESSION[kitContactInterface::session_kit_contact_id] : - 1,
+							            dbIdeaStatusChange::FIELD_INFO => $message,
+							            dbIdeaStatusChange::FIELD_INFO_DATE => date('Y-m-d H:i:s'),
+							            dbIdeaStatusChange::FIELD_PROJECT_ID => $this->params[self::param_idea_project_id],
+							            dbIdeaStatusChange::FIELD_PROJECT_GROUP => $this->params[self::param_idea_project_group],
+							            dbIdeaStatusChange::FIELD_STATUS => dbIdeaStatusChange::STATUS_UNDELIVERED);
+							    if (! $dbIdeaStatusChange->sqlInsertRecord($data)) {
+							        $this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, $dbIdeaStatusChange->getError()));
+							        return false;
+							    }
+							} else {
+							    // use the normal way...
+    							$data = array(
+    								'email' => (empty($email)) ? kdl_text_anonymous : $email,
+    								'file'	=> basename($upl_file) 
+    							);
+    							$body = $parser->get($this->template_path.'mail.upload.success.admin.htt', $data);
+    							$to_emails = array(SERVER_EMAIL);
+    							if ($_SESSION[self::session_prefix.self::session_protect] == self::protect_kit) {
+    								// if use KIT authtentification send 
+    								require_once(WB_PATH.'/modules/kit/class.config.php');
+    								$dbKITcfg = new dbKITcfg();
+    								$to_emails = $dbKITcfg->getValue(dbKITcfg::cfgKITadmins);
+    								if ((count($to_emails) < 1) || empty($to_emails[0])) {
+    									$to_emails = array(SERVER_EMAIL);						
+    								}
+    							}
+    							foreach ($to_emails as $to_email) {
+    								if (!$wb->mail(SERVER_EMAIL, $to_email, kdl_text_upload_subject, $body)) {
+    									$this->setError(sprintf(kdl_error_send_mail, SERVER_EMAIL));
+    									return false;
+    								}
+    							}
 							}
 						}
 					}
