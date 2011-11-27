@@ -34,7 +34,7 @@ if (defined('WB_PATH')) {
 $module_directory     = 'kit_dirlist';
 $module_name          = 'kitDirList';
 $module_function      = 'snippet';
-$module_version       = '0.25';
+$module_version       = '0.26';
 $module_status        = 'Stable';
 $module_platform      = '2.8'; 
 $module_author        = 'Ralf Hertsch, Berlin (Germany)';

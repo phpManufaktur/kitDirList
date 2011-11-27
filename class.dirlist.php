@@ -498,7 +498,6 @@ class kitDirList {
 		global $parser;
 		global $wb;
 		global $kitContactInterface;
-		
 		if ($_SESSION[self::session_prefix.self::session_protect] == self::protect_none) {
 			// no protection needed
 			$_SESSION[self::session_prefix.self::session_auth] = 0;
@@ -577,7 +576,7 @@ class kitDirList {
 				return true;
 			} // isAuthenticated()
 			else {
-				// not authenticated, show login dialog
+			    // not authenticated, show login dialog
 				return $this->loginDlg();
 			}
 		} 
@@ -803,53 +802,58 @@ class kitDirList {
   /**
    * Action handler of class kitDirList
    */
-	public function action() {
-		// check if there are errors...
-		if ($this->isError()) return $this->show();
+  public function action() {
+      // check if there are errors...
+      if ($this->isError()) return $this->show();
 		
-		// get params to $_SESSION...
-		foreach ($this->params as $key => $value) {
-			if (!isset($_SESSION[self::session_prefix.$key]) || ($_SESSION[self::session_prefix.$key] !== $value)) $_SESSION[self::session_prefix.$key] = $value;
-		}
-		// fields with HTML code
-  	$html_allowed = array();
-  	foreach ($_REQUEST as $key => $value) {
-  		if (!in_array($key, $html_allowed)) {
-  			$_REQUEST[$key] = $this->xssPrevent($value);
-  		}
-  	}
+      // get params to $_SESSION...
+      foreach ($this->params as $key => $value) {
+          if (!isset($_SESSION[self::session_prefix.$key]) || ($_SESSION[self::session_prefix.$key] !== $value)) $_SESSION[self::session_prefix.$key] = $value;
+      }
+      // fields with HTML code
+      $html_allowed = array();
+      foreach ($_REQUEST as $key => $value) {
+          if (!in_array($key, $html_allowed)) {
+              $_REQUEST[$key] = $this->xssPrevent($value);
+          }
+      }
   	
-  	// check the media paths
-  	if (!$this->checkPaths()) return $this->show();
-  	// check the session
- 		if (!$this->checkProtection()) return $this->show();
-  	// get action...
-    isset($_REQUEST[self::request_action]) ? $action = $_REQUEST[self::request_action] : $action = self::action_start;
-  	// check authentication and return login if neccessary...
-  	if ((!$this->is_authenticated) && (is_string($login = $this->checkAuthentication()))) return $login;
+  	  // check the media paths
+  	  if (!$this->checkPaths()) return $this->show();
   	
-  	// CSS laden? 
-		if ($this->params[self::param_css]) {
-			if (!is_registered_droplet_css('kit_dirlist', PAGE_ID)) {
-				register_droplet_css('kit_dirlist', PAGE_ID, 'kit_dirlist', 'kit_dirlist.css');
-			}
-		} elseif (is_registered_droplet_css('kit_dirlist', PAGE_ID)) {
-			unregister_droplet_css('kit_dirlist', PAGE_ID);
-		}
+  	  // check the session
+  	  if (!$this->checkProtection()) return $this->show();
+  	
+  	  // get action...
+      isset($_REQUEST[self::request_action]) ? $action = $_REQUEST[self::request_action] : $action = self::action_start;
+    
+      if ((!$this->is_authenticated) && (is_string($login = $this->checkAuthentication()))) {
+          // check authentication and return login if neccessary...
+          return $login;
+      }
+  	
+      // CSS laden? 
+      if ($this->params[self::param_css]) {
+          if (!is_registered_droplet_css('kit_dirlist', PAGE_ID)) {
+              register_droplet_css('kit_dirlist', PAGE_ID, 'kit_dirlist', 'kit_dirlist.css');
+          }
+      } elseif (is_registered_droplet_css('kit_dirlist', PAGE_ID)) {
+          unregister_droplet_css('kit_dirlist', PAGE_ID);
+      }
 		
   	
-  	$account = false;
-  	switch ($action):
-		case self::action_logout:
-			$result = $this->logout();
-			break;
+      $account = false;
+  	  switch ($action):
+  	      case self::action_logout:
+  	          $result = $this->logout();
+			  break;
 		case self::action_account:
-			$result = $this->accountDlg(); //$this->dlgKITaccount();
-			$account = true;
-			break;
+		      $result = $this->accountDlg(); //$this->dlgKITaccount();
+		      $account = true;
+		      break;
 		case self::action_start:
 		default: 
-			$result = $this->directoryListing();	
+		      $result = $this->directoryListing();	
 		endswitch;		
 		
 		return $this->show($result, $account);

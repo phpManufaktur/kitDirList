@@ -3,6 +3,11 @@ kitDirList
 Ralf Hertsch, Stockholmer Str. 31, 13359 Berlin (Germany)
 http://phpManufaktur.de - ralf.hertsch@phpManufaktur.de
 
+Release 0.26
+2011-11-28
+changed: kit_dirlist.css
+improved: interaction between kitIdea and kitDirList
+
 Release 0.25
 2011-11-20
 added: additional parameter for interaction between kitIdea and kitDirList 
