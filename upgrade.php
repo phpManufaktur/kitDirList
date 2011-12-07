@@ -30,6 +30,7 @@ if (defined('WB_PATH')) {
 // end include class.secure.php
 
 require_once(WB_PATH.'/modules/'.basename(dirname(__FILE__)).'/class.droplets.php');
+require_once(WB_PATH.'/modules/'.basename(dirname(__FILE__)).'/class.link.php');
 
 $error = '';
 
@@ -55,6 +56,17 @@ if ($message != "") {
 if (file_exists(WB_PATH.'/modules/'.basename(dirname(__FILE__)).'/frontend.css')) {
 	// unlink this old CSS file
 	@unlink(WB_PATH.'/modules/'.basename(dirname(__FILE__)).'/frontend.css');
+}
+
+$dbKITdirList = new dbKITdirList();
+if (!$dbKITdirList->sqlFieldExists(dbKITdirList::field_reference)) {
+    // add the additional field for references
+    if (!$dbKITdirList->sqlAlterTableAddField(dbKITdirList::field_reference, "VARCHAR(255) NOT NULL DEFAULT ''", dbKITdirList::field_id)) {
+        $error .= sprintf('[UPGRADE] Error: %s', $dbKITdirList->getError());
+    }
+    if (!$dbKITdirList->sqlAlterTableAddField(dbKITdirList::field_file_orgin, "VARCHAR(255) NOT NULL DEFAULT ''", dbKITdirList::field_id)) {
+        $error .= sprintf('[UPGRADE] Error: %s', $dbKITdirList->getError());
+    }
 }
 
 // Prompt Errors

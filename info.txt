@@ -3,6 +3,11 @@ kitDirList
 Ralf Hertsch, Stockholmer Str. 31, 13359 Berlin (Germany)
 http://phpManufaktur.de - ralf.hertsch@phpManufaktur.de
 
+Release 0.27
+2011-12-07
+added: field "reference" in dbKITdirList to mark uploads with a unique id 
+added: field "file_origin" to hold the origin filename
+
 Release 0.26
 2011-11-28
 changed: kit_dirlist.css
