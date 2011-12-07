@@ -7,6 +7,7 @@ Release 0.27
 2011-12-07
 added: field "reference" in dbKITdirList to mark uploads with a unique id 
 added: field "file_origin" to hold the origin filename
+changed: Dwoo compiler path is now set to /temp/compiled
 
 Release 0.26
 2011-11-28

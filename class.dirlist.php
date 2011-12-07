@@ -40,10 +40,20 @@ else {
 	require_once(WB_PATH.'/modules/'.basename(dirname(__FILE__)).'/languages/'.LANGUAGE.'.php'); 
 }
 
-if (!class_exists('Dwoo')) require_once(WB_PATH.'/modules/dwoo/include.php');
+// initialize Dwoo
+global $parser;
+ 
+if (!class_exists('Dwoo')) {
+	require_once WB_PATH.'/modules/dwoo/include.php';
+}
+
+$cache_path = WB_PATH.'/temp/cache';
+if (!file_exists($cache_path)) mkdir($cache_path, 0755, true);
+$compiled_path = WB_PATH.'/temp/compiled';
+if (!file_exists($compiled_path)) mkdir($compiled_path, 0755, true);
 
 global $parser;
-if (!is_object($parser)) $parser = new Dwoo();
+if (!is_object($parser)) $parser = new Dwoo($compiled_path, $cache_path);
 
 // include dbConnect
 if (!class_exists('dbConnectLE')) require_once(WB_PATH.'/modules/dbconnect_le/include.php');
