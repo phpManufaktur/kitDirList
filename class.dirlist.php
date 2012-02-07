@@ -688,8 +688,8 @@ class kitDirList {
 		// get the params array of kitForm
 		$params = $form->getParams();
 		// set the needed params
-		$params[formFrontend::param_form] = $this->params[self::param_login_dlg];
-		$params[formFrontend::param_return] = true;
+		$params['form'] = $this->params[self::param_login_dlg];
+		$params['return'] = true;
 		$form->setParams($params);
 		
 		$result = $form->action();
@@ -731,8 +731,8 @@ class kitDirList {
 		// get the params array
 		$params = $form->getParams();
 		// set the needed params
-		$params[formFrontend::param_form] = $this->params[self::param_account_dlg];
-		$params[formFrontend::param_return] = true;
+		$params['form'] = $this->params[self::param_account_dlg];
+		$params['return'] = true;
 		$form->setParams($params);
 		// return the user account dialog
 		return $form->action();		
