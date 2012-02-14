@@ -39,6 +39,11 @@ if (defined('WB_PATH')) {
 }
 // end include class.secure.php
 
+if ('á' != "\xc3\xa1") {
+	// important: language files must be saved as UTF-8 (without BOM)
+	trigger_error('The language file <b>'.basename(__FILE__).'</b> is damaged, it must be saved <b>UTF-8</b> encoded!', E_USER_ERROR);
+}
+
 define('kdl_alt_folder',										'Directory');
 define('kdl_alt_unlink',										'Delete');
 
@@ -66,6 +71,7 @@ define('kdl_error_kit_param_rejected',			'<p>Since KeepInTouch (KIT) is not inst
 define('kdl_error_kit_register_id_missing',	'<p>For the registration of the KIT <b>ID %05d<b> there is no valid entry. Please contact the system administrator!</p>');
 define('kdl_error_missing_kit_category',		'<p>Parameter <b>%s</b> calls categorie(s) <b>%s</b> which could not be found! Check your entries!</p>');
 define('kdl_error_missing_wb_group',				'<p>Parameter <b>%s</b> calls group <b>%s</b> which could not be found! Check your entries!</p>');
+define('kdl_error_please_update', 					'<p>Bitte aktualisieren Sie <b>%s</b>! Installiert ist die Version <b>%s</b>, benötigt wird Version <b>%s</b> oder höher!</p>');
 define('kdl_error_protection_undefined',		'<p>It was not defined how the access to this directory is to be controlled. Define a KeepInTouch (KIT) category or a WebsieBaker user group!</p>');
 define('kdl_error_public_dir_but_protect',	'<p>You have specified a publicly accessible MEDIA directory and by the same token like to have access control via a KeepInTouch (KIT) category respectively via a WebsiteBaker user group - that is not feasible. In order to enable access control the directory has to be located within <b>/media/kit_protect</b>!</p>');
 define('kdl_error_send_mail',								'<p>Error sending the status email to %s!</p>');

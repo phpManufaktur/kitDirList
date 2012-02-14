@@ -3,6 +3,14 @@ kitDirList
 Ralf Hertsch, Stockholmer Str. 31, 13359 Berlin (Germany)
 http://phpManufaktur.de - ralf.hertsch@phpManufaktur.de
 
+Release 0.28
+2012-02-14
+fixed: if the the user logged in over KIT the session does not terminate if the
+  user logged out
+changed: check for depending KIT modules will be no longer performed while the
+  installation to prevent recursive dependencies
+added: check the language files for correct UTF-8 encoding
+
 Release 0.27
 2011-12-07
 added: field "reference" in dbKITdirList to mark uploads with a unique id 

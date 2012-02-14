@@ -39,6 +39,11 @@ if (defined('WB_PATH')) {
 }
 // end include class.secure.php
 
+if ('á' != "\xc3\xa1") {
+	// important: language files must be saved as UTF-8 (without BOM)
+	trigger_error('The language file <b>'.basename(__FILE__).'</b> is damaged, it must be saved <b>UTF-8</b> encoded!', E_USER_ERROR);
+}
+
 define('kdl_alt_folder',										'Map');
 define('kdl_alt_unlink',										'Verwijderen');
 
@@ -66,6 +71,7 @@ define('kdl_error_kit_param_rejected',			'<p>Omdat KeepInTouch (KIT) niet geinst
 define('kdl_error_kit_register_id_missing',	'<p>Voor de registratie van het KIT <b>ID %05d<b> is dit geen valide waarde. Neem aub contact op met de  systeem administrator!</p>');
 define('kdl_error_missing_kit_category',		'<p>Parameter <b>%s</b> vraagt categorie(en) <b>%s</b> op die niet konden worden gevonden! Controleer uw ingevulde waarden!</p>');
 define('kdl_error_missing_wb_group',				'<p>Parameter <b>%s</b> vraagt groep <b>%s</b> op die niet kon worden gevonden! Controleer uw ingevulde waarden!</p>');
+define('kdl_error_please_update', 					'<p>Bitte aktualisieren Sie <b>%s</b>! Installiert ist die Version <b>%s</b>, benötigt wird Version <b>%s</b> oder höher!</p>');
 define('kdl_error_protection_undefined',		'<p>Het is niet bepaald hoe de toegang tot deze map wordt bepaald. Definieer een KeepInTouch (KIT) categorie of een WebsiteBaker gebruikers groep!</p>');
 define('kdl_error_public_dir_but_protect',	'<p>Je hebt een publiek toegankelijke MEDIA map gedefinieerd en met dezelfde gegevens wil je toegangscontrole hebben via een KeepInTouch (KIT) categorie respectievelijk via een WebsiteBaker gebruikers group - dat is niet mogelijk. Om toegangscontrole te hebben moet de map geplaatst zijn in <b>/media/kit_protect</b>!</p>');
 define('kdl_error_send_mail',								'<p>Fout bij het verzenden van de status email naar %s!</p>');

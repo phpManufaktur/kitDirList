@@ -42,7 +42,7 @@ $PRECHECK['WB_ADDONS'] = array(
 // SPECIAL: check dependencies at runtime but not at installation!
 if (file_exists(WB_PATH.'/modules/kit/info.php')) {
 	$PRECHECK['KIT'] = array(
-	        'kit' => array('VERSION' => '0.67', 'OPERATOR' => '>='),
+	        'kit' => array('VERSION' => '0.47', 'OPERATOR' => '>='),
 	        'kit_form' => array('VERSION' => '0.25', 'OPERATOR' => '>=')
 	);
 }

@@ -71,19 +71,24 @@ require_once(WB_PATH.'/framework/class.wb.php');
 require_once(WB_PATH.'/modules/droplets_extension/interface.php');
 
 // check dependencies for KIT
-require_once(WB_PATH.'/modules/'.basename(dirname(__FILE__)).'/precheck.php');
+global $PRECHECK;
 global $database;
+require_once(WB_PATH.'/modules/'.basename(dirname(__FILE__)).'/precheck.php');
 if (isset($PRECHECK['KIT'])) {
-	$passed = true;
 	if (isset($PRECHECK['KIT']['kit'])) {
 		$table = TABLE_PREFIX.'addons';
 		$version = $database->get_one("SELECT `version` FROM $table WHERE `directory`='kit'", MYSQL_ASSOC);
-		if (!version_compare($version, $PRECHECK['KIT']['kit']['VERSION'], $PRECHECK['KIT']['kit']['OPERATOR'])) $passed = false;
-		echo $version;
+		if (!version_compare($version, $PRECHECK['KIT']['kit']['VERSION'], $PRECHECK['KIT']['kit']['OPERATOR'])) {
+			trigger_error(sprintf(kdl_error_please_update, 'KeepInTouch', $version, $PRECHECK['KIT']['kit']['VERSION']), E_USER_ERROR);
+		}
 	}
-	if (!$passed) {
-		trigger_error('ERROR: please update!'. $version);
-	}
+	if (isset($PRECHECK['KIT']['kit_form'])) {
+		$table = TABLE_PREFIX.'addons';
+		$version = $database->get_one("SELECT `version` FROM $table WHERE `directory`='kit_form'", MYSQL_ASSOC);
+		if (!version_compare($version, $PRECHECK['KIT']['kit_form']['VERSION'], $PRECHECK['KIT']['kit_form']['OPERATOR'])) {
+			trigger_error(sprintf(kdl_error_please_update, 'kitForm', $version, $PRECHECK['KIT']['kit_form']['VERSION']), E_USER_ERROR);
+		}
+	}	
 }
 
 class kitDirList {
@@ -491,7 +496,8 @@ class kitDirList {
     global $parser;
     global $wb;
     global $kitContactInterface;
-    if ($_SESSION[self::session_prefix.self::session_protect] == self::protect_none) {
+        
+    if ($_SESSION[self::session_prefix.self::session_protect] == self::protect_none) { 
       // no protection needed
       $_SESSION[self::session_prefix.self::session_auth] = 0;
       $this->is_authenticated = true;
@@ -504,7 +510,7 @@ class kitDirList {
       }
       // include the KIT interface
       require_once WB_PATH.'/modules/kit/class.interface.php';
-      if ($kitContactInterface->isAuthenticated()) {
+      if ($kitContactInterface->isAuthenticated()) { 
         // user is already authenticated by KIT
         if ($_SESSION[self::session_prefix.self::param_kit_auto] == false) {
           // check categories only if kit_auto is not active
@@ -642,7 +648,7 @@ class kitDirList {
    * @return MIXED BOOL true on success or STR dialog/error
    */
   public function loginDlg() {
-
+  	
     if (!$this->kit_installed) {
       $this->setError(kdl_error_kit_not_installed);
       return $this->getError();
@@ -793,7 +799,7 @@ class kitDirList {
         $_REQUEST[$key] = $this->xssPrevent($value);
       }
     }
-
+    
     // check the media paths
     if (!$this->checkPaths())
       return $this->show();
@@ -804,12 +810,12 @@ class kitDirList {
 
     // get action...
     isset($_REQUEST[self::request_action]) ? $action = $_REQUEST[self::request_action] : $action = self::action_start;
-
+    
     if ((!$this->is_authenticated) && (is_string($login = $this->checkAuthentication()))) {
       // check authentication and return login if neccessary...
       return $login;
     }
-
+    
     // CSS laden?
     if ($this->params[self::param_css]) {
       if (!is_registered_droplet_css('kit_dirlist', PAGE_ID)) {
@@ -832,7 +838,7 @@ class kitDirList {
       default:
         $result = $this->directoryListing();
     endswitch;
-
+    
     return $this->show($result, $account);
   } // action()
 
@@ -893,7 +899,9 @@ class kitDirList {
    * @return STR dialog
    */
   public function logout() {
-    // unset all session vars...
+  	global $kitContactInterface;
+  	
+  	// unset all session vars...
     unset($_SESSION[self::session_prefix.self::session_user]);
     unset($_SESSION[self::session_prefix.self::session_auth]);
     unset($_SESSION[self::session_prefix.self::session_wb_grps]);
@@ -904,13 +912,18 @@ class kitDirList {
     if (($_SESSION[self::session_prefix.self::session_protect] == self::protect_group) || ($_SESSION[self::session_prefix.self::session_protect] == self::protect_wb)) {
       // WebsiteBaker Logout
       unset($_SESSION[self::session_prefix.self::session_protect]);
+      $this->is_authenticated = false;
       header("Location: ".LOGOUT_URL);
     } elseif ($_SESSION[self::session_prefix.self::session_protect] == self::protect_kit) {
       // KeepInTouch Logout
       unset($_SESSION[self::session_prefix.self::session_protect]);
+      require_once WB_PATH.'/modules/kit/class.interface.php';
+      $kitContactInterface->logout();
+      $this->is_authenticated = false;
       return $this->loginDlg();
     }
     // otherwise only unset the protected session...
+    $this->is_authenticated = false;
     unset($_SESSION[self::session_prefix.self::session_protect]);
   } // logout()
 
