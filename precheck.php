@@ -2,7 +2,7 @@
 
 /**
  * kitDirList
- * 
+ *
  * @author Ralf Hertsch (ralf.hertsch@phpmanufaktur.de)
  * @link http://phpmanufaktur.de
  * @copyright 2011
@@ -11,8 +11,8 @@
  */
 
 // include class.secure.php to protect this file and the whole CMS!
-if (defined('WB_PATH')) {	
-	if (defined('LEPTON_VERSION')) include(WB_PATH.'/framework/class.secure.php'); 
+if (defined('WB_PATH')) {
+	if (defined('LEPTON_VERSION')) include(WB_PATH.'/framework/class.secure.php');
 } else {
 	$oneback = "../";
 	$root = $oneback;
@@ -21,13 +21,14 @@ if (defined('WB_PATH')) {
 		$root .= $oneback;
 		$level += 1;
 	}
-	if (file_exists($root.'/framework/class.secure.php')) { 
-		include($root.'/framework/class.secure.php'); 
+	if (file_exists($root.'/framework/class.secure.php')) {
+		include($root.'/framework/class.secure.php');
 	} else {
 		trigger_error(sprintf("[ <b>%s</b> ] Can't include class.secure.php!", $_SERVER['SCRIPT_NAME']), E_USER_ERROR);
 	}
 }
 // end include class.secure.php
+
 
 // Checking Requirements
 $PRECHECK['WB_VERSION'] = array('VERSION' => '2.8', 'OPERATOR' => '>=');
@@ -38,14 +39,15 @@ $PRECHECK['WB_ADDONS'] = array(
         'droplets' => array('VERSION' => '1.0', 'OPERATOR' => '>='),
         'droplets_extension' => array('VERSION' => '0.16', 'OPERATOR' => '>=')
     );
+// SPECIAL: check dependencies at runtime but not at installation!
 if (file_exists(WB_PATH.'/modules/kit/info.php')) {
-	$PRECHECK['WB_ADDONS'] = array(
-	        'kit' => array('VERSION' => '0.47', 'OPERATOR' => '>='),
+	$PRECHECK['KIT'] = array(
+	        'kit' => array('VERSION' => '0.67', 'OPERATOR' => '>='),
 	        'kit_form' => array('VERSION' => '0.25', 'OPERATOR' => '>=')
-	);	
+	);
 }
 
-global $database;  
+global $database;
 $sql = "SELECT `value` FROM `".TABLE_PREFIX."settings` WHERE `name`='default_charset'";
 $result = $database->query($sql);
 if ($result) {
