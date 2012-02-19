@@ -3,6 +3,10 @@ kitDirList
 Ralf Hertsch, Stockholmer Str. 31, 13359 Berlin (Germany)
 http://phpManufaktur.de - ralf.hertsch@phpManufaktur.de
 
+Release 0.29
+
+changed: check for dependency to other KIT modules
+
 Release 0.28
 2012-02-14
 fixed: if the the user logged in over KIT the session does not terminate if the

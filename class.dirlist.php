@@ -70,6 +70,7 @@ require_once(WB_PATH.'/framework/class.wb.php');
 // include dropletsExtension
 require_once(WB_PATH.'/modules/droplets_extension/interface.php');
 
+/*
 // check dependencies for KIT
 global $PRECHECK;
 global $database;
@@ -90,6 +91,7 @@ if (isset($PRECHECK['KIT'])) {
     }
   }
 }
+*/
 
 class kitDirList {
 
@@ -268,6 +270,42 @@ class kitDirList {
     }
     return -1;
   } // getVersion()
+
+  /**
+   * Check dependency to to other KIT modules
+   *
+   * @return boolean true on success
+   */
+  public function checkDependency() {
+  	// check dependency for KIT
+  	global $PRECHECK;
+  	global $database;
+
+  	if (file_exists(WB_PATH.'/modules/kit/info.php')) {
+  		// check only if KIT is installed
+    	require_once(WB_PATH.'/modules/'.basename(dirname(__FILE__)).'/precheck.php');
+
+  		if (isset($PRECHECK['KIT']['kit'])) {
+  			$table = TABLE_PREFIX.'addons';
+  			$version = $database->get_one("SELECT `version` FROM $table WHERE `directory`='kit'", MYSQL_ASSOC);
+  			if (!version_compare($version, $PRECHECK['KIT']['kit']['VERSION'], $PRECHECK['KIT']['kit']['OPERATOR'])) {
+  				$this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__,
+  						sprintf(kdl_error_please_update, 'KeepInTouch', $version, $PRECHECK['KIT']['kit']['VERSION'])));
+  				return false;
+  			}
+  		}
+  		if (isset($PRECHECK['KIT']['kit_form'])) {
+  			$table = TABLE_PREFIX.'addons';
+  			$version = $database->get_one("SELECT `version` FROM $table WHERE `directory`='kit_form'", MYSQL_ASSOC);
+  			if (!version_compare($version, $PRECHECK['KIT']['kit_form']['VERSION'], $PRECHECK['KIT']['kit_form']['OPERATOR'])) {
+  				$this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__,
+  						sprintf(kdl_error_please_update, 'kitForm', $version, $PRECHECK['KIT']['kit_form']['VERSION'])));
+  				return false;
+  			}
+  		}
+  	} // if file_exists()
+  	return true;
+  } // checkDependency()
 
   /**
    * returns the parameters
@@ -827,9 +865,21 @@ class kitDirList {
    * Action handler of class kitDirList
    */
   public function action() {
+
+  	// CSS laden?
+  	if ($this->params[self::param_css]) {
+  		if (!is_registered_droplet_css('kit_dirlist', PAGE_ID)) {
+  			register_droplet_css('kit_dirlist', PAGE_ID, 'kit_dirlist', 'kit_dirlist.css');
+  		}
+  	} elseif (is_registered_droplet_css('kit_dirlist', PAGE_ID)) {
+  		unregister_droplet_css('kit_dirlist', PAGE_ID);
+  	}
+
     // check if there are errors...
-    if ($this->isError())
-      return $this->show();
+    if ($this->isError()) return $this->show();
+
+    // check dependency
+  	if (!$this->checkDependency()) return $this->show();
 
     // get params to $_SESSION...
     foreach ($this->params as $key => $value) {
@@ -858,15 +908,6 @@ class kitDirList {
     if ((!$this->is_authenticated) && (is_string($login = $this->checkAuthentication()))) {
       // check authentication and return login if neccessary...
       return $login;
-    }
-
-    // CSS laden?
-    if ($this->params[self::param_css]) {
-      if (!is_registered_droplet_css('kit_dirlist', PAGE_ID)) {
-        register_droplet_css('kit_dirlist', PAGE_ID, 'kit_dirlist', 'kit_dirlist.css');
-      }
-    } elseif (is_registered_droplet_css('kit_dirlist', PAGE_ID)) {
-      unregister_droplet_css('kit_dirlist', PAGE_ID);
     }
 
     $account = false;
