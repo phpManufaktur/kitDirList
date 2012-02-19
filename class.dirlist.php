@@ -886,12 +886,21 @@ class kitDirList {
       if (!isset($_SESSION[self::session_prefix.$key]) || ($_SESSION[self::session_prefix.$key] !== $value))
         $_SESSION[self::session_prefix.$key] = $value;
     }
-    // fields with HTML code
+
+    /**
+     * to prevent cross site scripting XSS it is important to look also to
+     * $_REQUESTs which are needed by other KIT addons. Addons which need
+     * a $_REQUEST with HTML should set a key in $_SESSION['KIT_HTML_REQUEST']
+     */
     $html_allowed = array();
+    if (isset($_SESSION['KIT_HTML_REQUEST'])) $html_allowed = $_SESSION['KIT_HTML_REQUEST'];
+    $html = array();
+    foreach ($html as $key) $html_allowed[] = $key;
+    $_SESSION['KIT_HTML_REQUEST'] = $html_allowed;
     foreach ($_REQUEST as $key => $value) {
-      if (!in_array($key, $html_allowed)) {
-        $_REQUEST[$key] = $this->xssPrevent($value);
-      }
+    	if (!in_array($key, $html_allowed)) {
+    		$_REQUEST[$key] = $this->xssPrevent($value);
+    	}
     }
 
     // check the media paths
