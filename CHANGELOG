@@ -1,0 +1,122 @@
+### kitDirList
+2011 - 2012 by phpManufaktur
+Ralf Hertsch, Stockholmer Str. 31, 13359 Berlin (Germany)
+http://phpManufaktur.de - ralf.hertsch@phpManufaktur.de
+
+Release 0.29 - 2012-06-18
+
+* changed: check for dependency to other KIT modules
+* changed: introduce $_SESSION['KIT_HTML_REQUEST'] to mark fields which should 
+  not processed by xssPrevent()
+* changend WebsiteBaker dependency check
+* changed license from GNU GPL to MIT
+* added LICENSE
+* added CHANGELOG
+* added README.md
+* update all header informations
+* removed the old README.txt
+
+Release 0.28 - 2012-02-14
+
+* fixed: if the the user logged in over KIT the session does not terminate if the
+  user logged out
+* changed: check for depending KIT modules will be no longer performed while the
+  installation to prevent recursive dependencies
+* added: check the language files for correct UTF-8 encoding
+
+Release 0.27 - 2011-12-07
+
+* added: field "reference" in dbKITdirList to mark uploads with a unique id 
+* added: field "file_origin" to hold the origin filename
+* changed: Dwoo compiler path is now set to /temp/compiled
+
+Release 0.26 - 2011-11-28
+
+* changed: kit_dirlist.css
+* improved: interaction between kitIdea and kitDirList
+
+Release 0.25 - 2011-11-20
+
+* added: additional parameter for interaction between kitIdea and kitDirList 
+
+Release 0.24 - 2011-10-20
+
+* fixed: dropletsExension not initialized in class.frontend.php 
+
+Release 0.23 - 2011-10-14
+
+* changed: kitDirList now uses kitForm for login and the account dialog
+* added: param account_hide hide the account and logout link
+* added: param login_dlg enables to choose a kitForm dialog for the login
+* added: param account_dlg enables to choose a kitForm dialog for the KIT account
+* added: kitDirList now uses the functionally of dropletsExtension
+* added: param css enables to switch css support on/off
+* added: uses now the LEPTON class.secure.php
+
+Release 0.22 - 2011-09-11
+
+* added: param page_link to set the link with individual parameters
+* changed: internal call of links
+* fixed: some smaller problems, code cleanup in class.dirlist.php
+
+Release 0.21 - 2011-06-24
+
+* bugfix: removed prompt of media path
+
+Release 0.20 - 2011-04-29
+
+* added: support for kitRegistry 
+
+Release 0.19 - 2011-03-31
+
+* added: NL.php - many thanks for translation to Erik van Iterson
+* updated: EN.php - added missing entries
+
+Release 0.18 - 2011-03-15
+
+* added: access to KIT account if user is logged in
+
+Release 0.17 - 2011-03-13
+
+* fixed: code cleanup and bug fixing for the new release 0.16 features 
+
+Release 0.16 - 2011-03-11
+
+* added: params wb_auto=true and kit_auto=true automatically creates directories 
+  for each user. User can access to their directory by log in over KIT or WB
+* added: param upload=true allow to upload files into the desired directory
+* added: param unlink=true allow to delete files or directories (recursive)
+* added: param mkdir=true allow to create directories
+
+Release 0.15 - 2011-02-18
+
+* fixed: security leak if user is switching from public directory to protected 
+  directory
+
+Release 0.14 - 2011-02-18
+
+* added: english README.txt with a brief description of kitDirList
+* added: english language file EN.php - many thanks to Armin Ipfelkofer for 
+  translation!
+
+Release 0.13 - 2011-02-15
+
+* fixed: recursive directory walk don't work on windows machines
+* done: code cleanup kitDirList::action()
+* fixed: HTTP 403 status prompt an empty page
+
+Release 0.12 - 2011-02-13
+
+* fixed: creating response URL within TOPICS article
+* done: some smaller code cleanups
+* added: anchor for the body container of the displayed directory
+* added: use dirlist.txt within the directories for file descriptions 
+
+Release 0.11 - 2011-02-12
+
+* fixed: error handling empty KeepInTouch (KIT) parmeters if KIT is not installed
+* fixed: access to empty $_SESSION var in kitDirList::show() 
+
+Release 0.10 - 2011-02-11
+
+* First Beta Release

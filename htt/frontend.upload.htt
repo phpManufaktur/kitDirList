@@ -1,4 +1,3 @@
-<!-- $Id$ -->
 <div class="kdl_upload_dialog">
   <form name="kdl_upload" enctype="multipart/form-data" action="{$url}" method="post">
     <input type="hidden" name="{$action_name}" value="{$action_value}" />

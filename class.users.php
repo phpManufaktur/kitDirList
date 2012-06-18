@@ -2,37 +2,36 @@
 
 /**
  * kitDirList
- * 
- * @author Ralf Hertsch (ralf.hertsch@phpmanufaktur.de)
+ *
+ * @author Ralf Hertsch <ralf.hertsch@phpmanufaktur.de>
  * @link http://phpmanufaktur.de
- * @copyright 2011
- * @license GNU GPL (http://www.gnu.org/licenses/gpl.html)
- * @version $Id$
- * 
- * FOR VERSION- AND RELEASE NOTES PLEASE LOOK AT INFO.TXT!
+ * @copyright 2011 - 2012
+ * @license MIT License (MIT) http://www.opensource.org/licenses/MIT
  */
 
 // include class.secure.php to protect this file and the whole CMS!
-if (defined('WB_PATH')) {	
-	if (defined('LEPTON_VERSION')) include(WB_PATH.'/framework/class.secure.php'); 
-} else {
-	$oneback = "../";
-	$root = $oneback;
-	$level = 1;
-	while (($level < 10) && (!file_exists($root.'/framework/class.secure.php'))) {
-		$root .= $oneback;
-		$level += 1;
-	}
-	if (file_exists($root.'/framework/class.secure.php')) { 
-		include($root.'/framework/class.secure.php'); 
-	} else {
-		trigger_error(sprintf("[ <b>%s</b> ] Can't include class.secure.php!", $_SERVER['SCRIPT_NAME']), E_USER_ERROR);
-	}
+if (defined('WB_PATH')) {
+  if (defined('LEPTON_VERSION')) include (WB_PATH . '/framework/class.secure.php');
+}
+else {
+  $oneback = "../";
+  $root = $oneback;
+  $level = 1;
+  while (($level < 10) && (!file_exists($root . '/framework/class.secure.php'))) {
+    $root .= $oneback;
+    $level += 1;
+  }
+  if (file_exists($root . '/framework/class.secure.php')) {
+    include ($root . '/framework/class.secure.php');
+  }
+  else {
+    trigger_error(sprintf("[ <b>%s</b> ] Can't include class.secure.php!", $_SERVER['SCRIPT_NAME']), E_USER_ERROR);
+  }
 }
 // end include class.secure.php
 
 class dbWBusers extends dbConnectLE {
-	
+
 	const field_user_id								= 'user_id';
 	const field_group_id							= 'group_id';
 	const field_groups_id							= 'groups_id';
@@ -50,10 +49,10 @@ class dbWBusers extends dbConnectLE {
 	const field_home_folder						= 'home_folder';
 	const field_login_when						= 'login_when';
 	const field_login_ip							= 'login_ip';
-	
+
 	const status_active								= 1;
 	const status_inactive							= 0;
-	
+
 	public function __construct() {
 		parent::__construct();
 		$this->setTableName('users');
@@ -77,30 +76,30 @@ class dbWBusers extends dbConnectLE {
 		// check field definitions
 		$this->checkFieldDefinitions();
 	} // __construct()
-	
+
 	public function sqlCreateTable() {
 		$this->setError('Function not implemented for this table!');
 		return false;
 	}
-	
+
 	public function sqlDeleteTable() {
 		$this->setError('Function not implemented for this table!');
 		return false;
 	}
-	
+
 } // class dbWBusers
 
 
 class dbWBgroups extends dbConnectLE {
-	
+
 	const field_group_id							= 'group_id';
 	const field_name									= 'name';
 	const field_system_permissions		= 'system_permissions';
 	const field_module_permissions		= 'module_permissions';
 	const field_template_permissions	= 'template_permissions';
-	
+
 	const kitWBgoup										= 'kitContact';
-	
+
 	public function __construct() {
 		parent::__construct();
 		$this->setTableName('groups');
@@ -117,12 +116,12 @@ class dbWBgroups extends dbConnectLE {
 		$this->setError('Function not implemented for this table!');
 		return false;
 	}
-	
+
 	public function sqlDeleteTable() {
 		$this->setError('Function not implemented for this table!');
 		return false;
 	}
-	
+
 } // class dbWBgroups
 
 ?>

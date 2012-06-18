@@ -2,32 +2,31 @@
 
 /**
  * kitDirList
- * 
- * @author Ralf Hertsch (ralf.hertsch@phpmanufaktur.de)
+ *
+ * @author Ralf Hertsch <ralf.hertsch@phpmanufaktur.de>
  * @link http://phpmanufaktur.de
- * @copyright 2011
- * @license GNU GPL (http://www.gnu.org/licenses/gpl.html)
- * @version $Id$
- * 
- * FOR VERSION- AND RELEASE NOTES PLEASE LOOK AT INFO.TXT!
+ * @copyright 2011 - 2012
+ * @license MIT License (MIT) http://www.opensource.org/licenses/MIT
  */
 
 // include class.secure.php to protect this file and the whole CMS!
-if (defined('WB_PATH')) {	
-	if (defined('LEPTON_VERSION')) include(WB_PATH.'/framework/class.secure.php'); 
-} else {
-	$oneback = "../";
-	$root = $oneback;
-	$level = 1;
-	while (($level < 10) && (!file_exists($root.'/framework/class.secure.php'))) {
-		$root .= $oneback;
-		$level += 1;
-	}
-	if (file_exists($root.'/framework/class.secure.php')) { 
-		include($root.'/framework/class.secure.php'); 
-	} else {
-		trigger_error(sprintf("[ <b>%s</b> ] Can't include class.secure.php!", $_SERVER['SCRIPT_NAME']), E_USER_ERROR);
-	}
+if (defined('WB_PATH')) {
+  if (defined('LEPTON_VERSION')) include (WB_PATH . '/framework/class.secure.php');
+}
+else {
+  $oneback = "../";
+  $root = $oneback;
+  $level = 1;
+  while (($level < 10) && (!file_exists($root . '/framework/class.secure.php'))) {
+    $root .= $oneback;
+    $level += 1;
+  }
+  if (file_exists($root . '/framework/class.secure.php')) {
+    include ($root . '/framework/class.secure.php');
+  }
+  else {
+    trigger_error(sprintf("[ <b>%s</b> ] Can't include class.secure.php!", $_SERVER['SCRIPT_NAME']), E_USER_ERROR);
+  }
 }
 // end include class.secure.php
 
@@ -35,12 +34,12 @@ global $kdlTools;
 if (!is_object($kdlTools)) $kdlTools = new kitDirListTools();
 
 class kitDirListTools {
-	
+
   const   	unkownUser = 'UNKNOWN USER';
   const   	unknownEMail = 'unknown@user.tld';
   private 	$error;
   private 	$googleMapsAPIkey = '';
-  
+
   /**
    * Konstruktor
    *
@@ -138,7 +137,7 @@ class kitDirListTools {
     global $database ;
     global $sql_result ;
     $settings = array();
-    $thisQuery = "SELECT * FROM " . TABLE_PREFIX . "settings" ;		
+    $thisQuery = "SELECT * FROM " . TABLE_PREFIX . "settings" ;
     $oldErrorReporting = error_reporting(0) ;
     $sql_result = $database->query($thisQuery) ;
     error_reporting($oldErrorReporting) ;
@@ -178,17 +177,17 @@ class kitDirListTools {
    * im Front- und Backend zurueck
    *
    * @return STR
-   */  
+   */
   public function getDisplayName() {
     global $wb;
     global $admin;
     if ($this->isFrontendActive()) {
     	if (is_object($wb)) {
 	      if ($wb->is_authenticated()) {
-	        return $wb->get_display_name();  
+	        return $wb->get_display_name();
 	      }
 	      else {
-	        return self::unkownUser; 
+	        return self::unkownUser;
 	      }
     	}
     	else {
@@ -199,7 +198,7 @@ class kitDirListTools {
       if ($admin->is_authenticated()) {
         return $admin->get_display_name(); }
       else {
-        return self::unkownUser; 
+        return self::unkownUser;
       }
     }
     else {
@@ -318,17 +317,17 @@ class kitDirListTools {
   		}
   		else {
   			return false;
-  		} 		
+  		}
   	}
     elseif ($this->getFileNameByPageID($pageID, $url)) {
     	$url = WB_URL.PAGES_DIRECTORY.'/'.$url;
     }
     else {
     	return false;
-    }    
+    }
     return true;
   }
-  
+
     /**
    * Erzeugt einen Link fuer die als page_id angegebene Seite.
    * Parameter werden als Array in der Form 'KEY' => 'VALUE' uebergeben.
@@ -346,10 +345,10 @@ class kitDirListTools {
     foreach ($params as $key => $value) {
     	if ($start) {
     	  $start = false;
-     	  $link .= "?$key=$value"; 
+     	  $link .= "?$key=$value";
     	}
      	else {
-     	  $link .= "&$key=$value"; 
+     	  $link .= "&$key=$value";
      	}
     }
     return true;
@@ -476,7 +475,7 @@ class kitDirListTools {
         $guid = com_create_guid();
         $guid = strtolower($guid);
         if (strpos($guid, '{') == 0) {
-        $guid = substr($guid, 1); 
+        $guid = substr($guid, 1);
         }
         if (strpos($guid, '}') == strlen($guid)-1) {
         $guid = substr($guid, 0, strlen($guid)-2);
@@ -596,7 +595,7 @@ class kitDirListTools {
       return $string;
     }
   }
-	
+
   public function convertBytes($value) {
     if (is_numeric($value)) {
       return $value; }
@@ -618,8 +617,8 @@ class kitDirListTools {
       return $qty;
     }
 	} // convertBytes
-  
-  
+
+
 } // class kitTools
 
 
