@@ -8,6 +8,7 @@ Release 0.29
 changed: check for dependency to other KIT modules
 changed: introduce $_SESSION['KIT_HTML_REQUEST'] to mark fields which should not
   processed by xssPrevent()
+changend WebsiteBaker dependency check
 
 Release 0.28
 2012-02-14
