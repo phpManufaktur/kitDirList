@@ -1478,6 +1478,10 @@ class kitDirList {
           if (in_array(strtolower($file_info['extension']), $exclude))
             continue;
         }
+
+        // show only files uploaded/changed the last 28 days
+        //if (filemtime($dir.$item) < mktime(0, 0, 0, date('n'), date('j')-28, date('Y'))) continue;
+
         // ok - this file should be shown...
         if ($redirect) {
           // protected file don't allow direct access...

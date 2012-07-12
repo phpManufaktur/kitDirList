@@ -3,6 +3,11 @@
 Ralf Hertsch, Stockholmer Str. 31, 13359 Berlin (Germany)
 http://phpManufaktur.de - ralf.hertsch@phpManufaktur.de
 
+Release 0.39
+
+* inserted sample code to show only files uploaded/changed within the last
+  28 days - see `class.dirlist.php` line 1482 ff.
+
 Release 0.29 - 2012-06-18
 
 * changed: check for dependency to other KIT modules
