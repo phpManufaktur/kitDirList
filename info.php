@@ -33,7 +33,7 @@ else {
 $module_directory = 'kit_dirlist';
 $module_name = 'kitDirList';
 $module_function = 'snippet';
-$module_version = '0.29';
+$module_version = '0.30';
 $module_status = 'Stable';
 $module_platform = '2.8';
 $module_author = 'Ralf Hertsch, Berlin (Germany)';

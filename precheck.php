@@ -32,17 +32,24 @@ else {
 
 // Checking Requirements
 $PRECHECK['PHP_VERSION'] = array('VERSION' => '5.2.0', 'OPERATOR' => '>=');
-$PRECHECK['WB_ADDONS'] = array(
-    'dbconnect_le' => array('VERSION' => '0.64', 'OPERATOR' => '>='),
-    'dwoo' => array('VERSION' => '0.11', 'OPERATOR' => '>='),
-    'droplets' => array('VERSION' => '1.0', 'OPERATOR' => '>='),
-    'droplets_extension' => array('VERSION' => '0.16', 'OPERATOR' => '>=')
-		);
+if (defined(CAT_VERSION)) {
+    $PRECHECK['WB_ADDONS'] = array(
+        'dbconnect_le' => array('VERSION' => '0.64', 'OPERATOR' => '>=')
+    );
+}
+else {
+    $PRECHECK['WB_ADDONS'] = array(
+        'dbconnect_le' => array('VERSION' => '0.64', 'OPERATOR' => '>='),
+        'dwoo' => array('VERSION' => '0.11', 'OPERATOR' => '>='),
+        'droplets' => array('VERSION' => '1.0', 'OPERATOR' => '>='),
+        'droplets_extension' => array('VERSION' => '0.16', 'OPERATOR' => '>=')
+    );
+}
 // SPECIAL: check dependency at runtime in kitDirList::checkDependency()
 $PRECHECK['KIT'] = array(
     'kit' => array('VERSION' => '0.53', 'OPERATOR' => '>='),
     'kit_form' => array('VERSION' => '0.32', 'OPERATOR' => '>=')
-		);
+        );
 
 global $database;
 $sql = "SELECT `value` FROM `".TABLE_PREFIX."settings` WHERE `name`='default_charset'";
@@ -54,8 +61,8 @@ if ($result) {
           'REQUIRED' => 'utf-8',
           'ACTUAL' => $data['value'],
           'STATUS' => ($data['value'] === 'utf-8')
-      		)
-  		);
+              )
+          );
 }
 
 ?>

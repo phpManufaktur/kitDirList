@@ -3,15 +3,17 @@
 Ralf Hertsch, Stockholmer Str. 31, 13359 Berlin (Germany)
 http://phpManufaktur.de - ralf.hertsch@phpManufaktur.de
 
-Release 0.39
+Release 0.30 - 2013-11-21
 
+* changed: precheck.php does no longer check for Dwoo and DropletsExtension at
+  BlackCat CMS environment
 * inserted sample code to show only files uploaded/changed within the last
   28 days - see `class.dirlist.php` line 1482 ff.
 
 Release 0.29 - 2012-06-18
 
 * changed: check for dependency to other KIT modules
-* changed: introduce $_SESSION['KIT_HTML_REQUEST'] to mark fields which should 
+* changed: introduce $_SESSION['KIT_HTML_REQUEST'] to mark fields which should
   not processed by xssPrevent()
 * changend WebsiteBaker dependency check
 * changed license from GNU GPL to MIT
@@ -31,7 +33,7 @@ Release 0.28 - 2012-02-14
 
 Release 0.27 - 2011-12-07
 
-* added: field "reference" in dbKITdirList to mark uploads with a unique id 
+* added: field "reference" in dbKITdirList to mark uploads with a unique id
 * added: field "file_origin" to hold the origin filename
 * changed: Dwoo compiler path is now set to /temp/compiled
 
@@ -42,11 +44,11 @@ Release 0.26 - 2011-11-28
 
 Release 0.25 - 2011-11-20
 
-* added: additional parameter for interaction between kitIdea and kitDirList 
+* added: additional parameter for interaction between kitIdea and kitDirList
 
 Release 0.24 - 2011-10-20
 
-* fixed: dropletsExension not initialized in class.frontend.php 
+* fixed: dropletsExension not initialized in class.frontend.php
 
 Release 0.23 - 2011-10-14
 
@@ -70,7 +72,7 @@ Release 0.21 - 2011-06-24
 
 Release 0.20 - 2011-04-29
 
-* added: support for kitRegistry 
+* added: support for kitRegistry
 
 Release 0.19 - 2011-03-31
 
@@ -83,11 +85,11 @@ Release 0.18 - 2011-03-15
 
 Release 0.17 - 2011-03-13
 
-* fixed: code cleanup and bug fixing for the new release 0.16 features 
+* fixed: code cleanup and bug fixing for the new release 0.16 features
 
 Release 0.16 - 2011-03-11
 
-* added: params wb_auto=true and kit_auto=true automatically creates directories 
+* added: params wb_auto=true and kit_auto=true automatically creates directories
   for each user. User can access to their directory by log in over KIT or WB
 * added: param upload=true allow to upload files into the desired directory
 * added: param unlink=true allow to delete files or directories (recursive)
@@ -95,13 +97,13 @@ Release 0.16 - 2011-03-11
 
 Release 0.15 - 2011-02-18
 
-* fixed: security leak if user is switching from public directory to protected 
+* fixed: security leak if user is switching from public directory to protected
   directory
 
 Release 0.14 - 2011-02-18
 
 * added: english README.txt with a brief description of kitDirList
-* added: english language file EN.php - many thanks to Armin Ipfelkofer for 
+* added: english language file EN.php - many thanks to Armin Ipfelkofer for
   translation!
 
 Release 0.13 - 2011-02-15
@@ -115,12 +117,12 @@ Release 0.12 - 2011-02-13
 * fixed: creating response URL within TOPICS article
 * done: some smaller code cleanups
 * added: anchor for the body container of the displayed directory
-* added: use dirlist.txt within the directories for file descriptions 
+* added: use dirlist.txt within the directories for file descriptions
 
 Release 0.11 - 2011-02-12
 
 * fixed: error handling empty KeepInTouch (KIT) parmeters if KIT is not installed
-* fixed: access to empty $_SESSION var in kitDirList::show() 
+* fixed: access to empty $_SESSION var in kitDirList::show()
 
 Release 0.10 - 2011-02-11
 
